@@ -1,0 +1,14 @@
+{
+  "appId": "com.prince5522.storieseditor",
+  "appName": "Stories Editor",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  },
+  "plugins": {
+    "LocalNotifications": {
+      "iconColor": "#00A86B",
+      "sound": "default"
+    }
+  }
+}
