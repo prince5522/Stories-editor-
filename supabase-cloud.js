@@ -1,3 +1,4 @@
+
 /* =========================================================
    STORY STUDIO — SUPABASE CLOUD SYSTEM
    Authentication: Email + Password
@@ -10,10 +11,10 @@
   'use strict';
 
   const PROJECT_URL =
-    'https://fkyihttehxinegibcwws.supabase.co';
+    'https://jsxfarnboxcfyptwktub.supabase.co';
 
   const PUBLISHABLE_KEY =
-    'sb_publishable_N54NlBxYHQgpiKr7oy2oRQ_yfe_E1dV';
+    'sb_publishable_dNWnY4UFLlyqAkPNc73tIA_JuYCk0K2';
 
   const statusEl = () =>
     document.getElementById('cloudStatus');
@@ -908,7 +909,8 @@
       const { error } = await client.auth.signOut();
 
       if (error) throw error;
-       localStorage.removeItem('channelStudio.authenticated');
+
+      localStorage.removeItem('channelStudio.authenticated');
       localStorage.removeItem('channelStudio.username');
 
       initialized = false;
