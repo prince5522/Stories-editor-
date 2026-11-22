@@ -1,12 +1,9 @@
 /* =====================================================
    STORIES EDITOR — APP SHELL BEHAVIOUR
    Android safe area
+   Shared sidebar navigation
    Planner notification routing
    Global wallpaper restoration
-
-   IMPORTANT:
-   Sidebar navigation is handled by app.js.
-   Do not add another sidebar click handler here.
 ===================================================== */
 
 (function () {
@@ -86,6 +83,68 @@ function applyAndroidSafeArea() {
   `;
 
   document.head.appendChild(style);
+}
+
+/* ---------- SHARED SIDEBAR NAVIGATION ---------- */
+
+function setupSidebarNavigation() {
+  const menuToggle =
+    document.getElementById('menuToggle');
+
+  const sidebar =
+    document.querySelector('.sidebar');
+
+  if (!menuToggle || !sidebar) return;
+
+  if (menuToggle.dataset.shellSidebarWired === '1') {
+    return;
+  }
+
+  menuToggle.dataset.shellSidebarWired = '1';
+
+  // Prevent app.js from attaching a duplicate handler.
+  menuToggle.dataset.wired = '1';
+
+  document.addEventListener('click', function (event) {
+    const currentSidebar =
+      document.querySelector('.sidebar');
+
+    const currentToggle =
+      document.getElementById('menuToggle');
+
+    if (!currentSidebar || !currentToggle) return;
+
+    const clickedToggle =
+      event.target.closest('#menuToggle');
+
+    if (clickedToggle) {
+      event.preventDefault();
+
+      currentSidebar.classList.toggle('open');
+
+      currentToggle.setAttribute(
+        'aria-expanded',
+        currentSidebar.classList.contains('open')
+          ? 'true'
+          : 'false'
+      );
+
+      return;
+    }
+
+    if (
+      currentSidebar.classList.contains('open') &&
+      !currentSidebar.contains(event.target) &&
+      !currentToggle.contains(event.target)
+    ) {
+      currentSidebar.classList.remove('open');
+
+      currentToggle.setAttribute(
+        'aria-expanded',
+        'false'
+      );
+    }
+  });
 }
 
 /* ---------- PLANNER NOTIFICATION ROUTING ---------- */
@@ -463,9 +522,7 @@ function loadGlobalWallpaper() {
 /* ---------- STARTUP ---------- */
 
 function start() {
-  // Sidebar is intentionally NOT initialized here.
-  // The original sidebar handler in app.js owns it.
-
+  setupSidebarNavigation();
   applyAndroidSafeArea();
   registerAndroidNotificationClicks();
   loadGlobalWallpaper();
