@@ -1,10 +1,8 @@
 
 /* =====================================================
-   STORIES EDITOR — ANDROID NATIVE REMINDER BRIDGE
-   Daily slot reminders + 5-minute post confirmation
-   Android notification actions:
-   - Yes, posted
-   - Not yet
+   STORIES EDITOR — ANDROID NATIVE NOTIFICATIONS
+   Daily posting reminders + post confirmation actions
+   Capacitor Local Notifications 7
 ===================================================== */
 
 (function () {
@@ -12,10 +10,10 @@
 
   const SLOT_NAMES = ['morning', 'lunch', 'evening'];
   const PLANNER_KEY = 'storySlotPlannerV1';
+
   const POST_REMINDER_ID = 44001;
   const POST_ACTION_TYPE = 'STORY_POST_CONFIRMATION';
   const POST_REMINDER_DELAY = 5 * 60 * 1000;
-  const WHATSAPP_LAUNCH_WINDOW_MS = 90000;
 
   const ID_BASE = {
     morning: 41000,
@@ -25,7 +23,8 @@
 
   let syncing = false;
   let actionListenerReady = false;
-  let originalWindowOpen = null;
+
+  /* ---------- PLATFORM ---------- */
 
   function getPlugin() {
     return window.Capacitor?.Plugins?.LocalNotifications || null;
@@ -38,42 +37,35 @@
     );
   }
 
-  function readSettings() {
-    try {
-      return window.StudioStore?.get(PLANNER_KEY, {}) || {};
-    } catch (error) {
-      console.warn('Could not read planner settings:', error);
-      return {};
-    }
-  }
-
-  function writeSettings(settings) {
-    try {
-      window.StudioStore?.set(PLANNER_KEY, settings);
-      return true;
-    } catch (error) {
-      console.error('Could not save planner settings:', error);
-      return false;
-    }
-  }
+  /* ---------- STORAGE ---------- */
 
   function readStore(key, fallback) {
     try {
       return window.StudioStore?.get(key, fallback) ?? fallback;
-    } catch (_) {
+    } catch (error) {
+      console.warn('Could not read ' + key, error);
       return fallback;
     }
   }
 
   function writeStore(key, value) {
     try {
-      window.StudioStore?.set(key, value);
-      return true;
+      return window.StudioStore?.set(key, value) !== false;
     } catch (error) {
-      console.error('Could not save ' + key + ':', error);
+      console.error('Could not save ' + key, error);
       return false;
     }
   }
+
+  function readSettings() {
+    return readStore(PLANNER_KEY, {}) || {};
+  }
+
+  function writeSettings(settings) {
+    return writeStore(PLANNER_KEY, settings);
+  }
+
+  /* ---------- DATE HELPERS ---------- */
 
   function dateKey(date) {
     return [
@@ -83,10 +75,24 @@
     ].join('-');
   }
 
-  function isCompleted(settings, slotName, date) {
-    const scheduledDay = dateKey(date);
+  function nextDate(time, offset) {
+    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(
+      String(time || '')
+    );
 
-    if (settings.slotRuns?.[slotName] === scheduledDay) {
+    if (!match) return null;
+
+    const date = new Date();
+    date.setDate(date.getDate() + offset);
+    date.setHours(Number(match[1]), Number(match[2]), 0, 0);
+
+    return date;
+  }
+
+  function isCompleted(settings, slotName, date) {
+    const day = dateKey(date);
+
+    if (settings.slotRuns?.[slotName] === day) {
       return true;
     }
 
@@ -104,23 +110,11 @@
       const completedDate = new Date(value);
 
       return !Number.isNaN(completedDate.getTime()) &&
-        dateKey(completedDate) === scheduledDay;
+        dateKey(completedDate) === day;
     });
   }
 
-  function nextDate(time, offset) {
-    const match = /^([01]\d|2[0-3]):([0-5]\d)$/.exec(
-      String(time || '')
-    );
-
-    if (!match) return null;
-
-    const date = new Date();
-    date.setDate(date.getDate() + offset);
-    date.setHours(Number(match[1]), Number(match[2]), 0, 0);
-
-    return date;
-  }
+  /* ---------- PERMISSIONS ---------- */
 
   async function requestNotificationPermission(plugin) {
     let permission = await plugin.checkPermissions();
@@ -133,17 +127,22 @@
   }
 
   async function checkExactAlarmPermission(plugin) {
-    if (typeof plugin.checkExactNotificationSetting !== 'function') {
+    if (
+      typeof plugin.checkExactNotificationSetting !== 'function'
+    ) {
       return true;
     }
 
     const result = await plugin.checkExactNotificationSetting();
+
     return result.exact_alarm === 'granted';
   }
 
   async function registerPostActions(plugin) {
     if (typeof plugin.registerActionTypes !== 'function') {
-      console.warn('This Local Notifications version does not support action buttons.');
+      console.warn(
+        'This notification plugin version does not support action buttons.'
+      );
       return false;
     }
 
@@ -152,21 +151,30 @@
         types: [{
           id: POST_ACTION_TYPE,
           actions: [
-            { id: 'posted', title: 'Yes, posted' },
-            { id: 'not-posted', title: 'Not yet' }
+            {
+              id: 'posted',
+              title: 'Yes, posted'
+            },
+            {
+              id: 'not-posted',
+              title: 'Not yet'
+            }
           ]
         }]
       });
 
       return true;
     } catch (error) {
-      console.error('Could not register post confirmation actions:', error);
+      console.error('Could not register notification actions:', error);
       return false;
     }
   }
 
+  /* ---------- POST REMINDER ---------- */
+
   async function cancelPostConfirmation() {
     const plugin = getPlugin();
+
     if (!plugin || !isAndroidApp()) return;
 
     try {
@@ -174,11 +182,11 @@
         notifications: [{ id: POST_REMINDER_ID }]
       });
     } catch (error) {
-      console.warn('Could not cancel post confirmation reminder:', error);
+      console.warn('Could not cancel post reminder:', error);
     }
   }
 
-  function episodeTitle(settings, slotName, pending) {
+  function getEpisodeTitle(settings, slotName, pending) {
     const slot = settings.slots?.[slotName] || {};
 
     return [
@@ -194,10 +202,11 @@
     if (!plugin) return false;
 
     try {
-      const allowed = await requestNotificationPermission(plugin);
+      const allowed =
+        await requestNotificationPermission(plugin);
 
       if (!allowed) {
-        console.warn('Post confirmation reminder skipped: notification permission denied.');
+        console.warn('Notification permission was denied.');
         return false;
       }
 
@@ -214,19 +223,26 @@
       }
 
       const actionsReady = await registerPostActions(plugin);
+
       if (!actionsReady) return false;
 
       await cancelPostConfirmation();
 
-      const slotName = details.slot;
-      const title = episodeTitle(settings, slotName, pending);
-      const remindAt = new Date(Date.now() + POST_REMINDER_DELAY);
+      const remindAt = new Date(
+        Date.now() + POST_REMINDER_DELAY
+      );
+
+      const title = getEpisodeTitle(
+        settings,
+        details.slot,
+        pending
+      );
 
       await plugin.schedule({
         notifications: [{
           id: POST_REMINDER_ID,
           title: '📖 Have you posted this episode?',
-          body: title + ' — tap Yes, posted or Not yet.',
+          body: title + ' — choose Yes, posted or Not yet.',
           schedule: {
             at: remindAt,
             allowWhileIdle: true
@@ -235,10 +251,11 @@
           autoCancel: true,
           extra: {
             kind: 'story-post-confirmation',
-            slot: slotName,
+            slot: details.slot,
             episodeId: pending.episodeId,
             episodeLabel: pending.episodeLabel || '',
-            storyName: settings.slots?.[slotName]?.storyName || ''
+            storyName:
+              settings.slots?.[details.slot]?.storyName || ''
           }
         }]
       });
@@ -247,25 +264,32 @@
 
       if (
         latest.pending &&
-        latest.pending.slot === slotName &&
-        String(latest.pending.episodeId) === String(details.episodeId)
+        latest.pending.stage === 'episode-opened' &&
+        latest.pending.slot === details.slot &&
+        String(latest.pending.episodeId) ===
+          String(details.episodeId)
       ) {
-        latest.pending.confirmationReminderAt = remindAt.toISOString();
+        latest.pending.confirmationReminderAt =
+          remindAt.toISOString();
 
         latest.pending.confirmationReminderCount =
-          Number(latest.pending.confirmationReminderCount || 0) + 1;
+          Number(
+            latest.pending.confirmationReminderCount || 0
+          ) + 1;
 
         writeSettings(latest);
       }
 
-      console.log('Post confirmation reminder scheduled for five minutes after opening WhatsApp.');
+      console.log('Five-minute post confirmation reminder scheduled.');
       return true;
 
     } catch (error) {
-      console.error('Could not schedule post confirmation reminder:', error);
+      console.error('Could not schedule post reminder:', error);
       return false;
     }
   }
+
+  /* ---------- EPISODE LOOKUP ---------- */
 
   function sameStoryName(a, b) {
     return String(a || '').trim().toLowerCase() ===
@@ -279,6 +303,24 @@
       Number(b.episode_number || 1);
   }
 
+  function findReadyEpisode(episodeId) {
+    const episodes = readStore('readyMadeEpisodes', []);
+
+    return episodes.find(item =>
+      String(item.id) === String(episodeId)
+    ) || null;
+  }
+
+  function findSerialEpisode(episodeId) {
+    const episodes = readStore('episodes', []);
+
+    return episodes.find(item =>
+      String(item.id) === String(episodeId)
+    ) || null;
+  }
+
+  /* ---------- MARK EPISODE AS POSTED ---------- */
+
   function markReadyEpisodePosted(episodeId) {
     const episodes = readStore('readyMadeEpisodes', []);
 
@@ -288,30 +330,59 @@
 
     if (index < 0) return false;
 
-    episodes[index].status = 'posted';
-    episodes[index].posted_at = new Date().toISOString();
+    episodes[index] = {
+      ...episodes[index],
+      status: 'posted',
+      posted_at: new Date().toISOString(),
+      postedAt: new Date().toISOString()
+    };
 
-    writeStore('readyMadeEpisodes', episodes);
-    return true;
+    return writeStore('readyMadeEpisodes', episodes);
   }
+
+  function markSerialEpisodePosted(episodeId) {
+    const episodes = readStore('episodes', []);
+
+    const index = episodes.findIndex(item =>
+      String(item.id) === String(episodeId)
+    );
+
+    if (index < 0) return false;
+
+    const now = new Date().toISOString();
+
+    episodes[index] = {
+      ...episodes[index],
+      status: 'posted',
+      postedAt: now,
+      posted_at: now
+    };
+
+    return writeStore('episodes', episodes);
+  }
+
+  /* ---------- QUEUE PROGRESSION ---------- */
 
   function advanceQueuePosition(settings, slotName, episode) {
     const slot = settings.slots?.[slotName];
+
     if (!slot || !episode) return;
 
+    const isReady = slot.type === 'ready';
+
     const season = Number(
-      slot.type === 'ready'
+      isReady
         ? episode.season_number || 1
         : episode.seasonNumber || 1
     );
 
     const number = Number(
-      slot.type === 'ready'
+      isReady
         ? episode.episode_number || 1
         : episode.episodeNumber || 1
     );
 
-    if (slot.type === 'ready') {
+    if (isReady) {
       const all = readStore('readyMadeEpisodes', []);
 
       const storyEpisodes = all
@@ -338,7 +409,7 @@
         slot.season = Number(next.season_number || 1);
         slot.episode = Number(next.episode_number || 1);
       } else {
-        // Ready-Made episodes are not limited to 13 per season.
+        // Ready-Made stories have no 13-episode limit.
         slot.season = season;
         slot.episode = number + 1;
       }
@@ -346,6 +417,7 @@
       return;
     }
 
+    // Serial stories use 13 episodes per season.
     if (number >= 13) {
       slot.season = season + 1;
       slot.episode = 1;
@@ -355,59 +427,69 @@
     }
   }
 
+  /* ---------- CONFIRM POST FROM NOTIFICATION ---------- */
+
   function confirmPostFromNotification(extra) {
     const slotName = extra?.slot;
     const episodeId = extra?.episodeId;
 
-    if (!SLOT_NAMES.includes(slotName) || episodeId == null) {
-      console.warn('Post confirmation notification did not contain a valid queue and episode.');
+    if (
+      !SLOT_NAMES.includes(slotName) ||
+      episodeId == null
+    ) {
+      console.warn('Invalid post confirmation notification data.');
       return false;
     }
 
     const settings = readSettings();
     const pending = settings.pending;
 
+    // Never mark a different episode as posted.
     if (
       !pending ||
       pending.stage !== 'episode-opened' ||
       pending.slot !== slotName ||
       String(pending.episodeId) !== String(episodeId)
     ) {
-      console.warn('Post confirmation ignored because the active episode no longer matches.');
+      console.warn('Notification does not match the active episode.');
       cancelPostConfirmation();
       return false;
     }
 
     const slot = settings.slots?.[slotName];
+
     if (!slot) return false;
 
     let episode = null;
+    let marked = false;
 
     if (slot.type === 'ready') {
-      const episodes = readStore('readyMadeEpisodes', []);
-
-      episode = episodes.find(item =>
-        String(item.id) === String(episodeId)
-      ) || null;
+      episode = findReadyEpisode(episodeId);
 
       if (!episode) {
-        console.warn('Ready-Made episode was not found; queue was not advanced.');
+        console.warn('Ready-Made episode was not found.');
         return false;
       }
 
-      markReadyEpisodePosted(episodeId);
+      marked = markReadyEpisodePosted(episodeId);
 
     } else {
-      const episodes = readStore('episodes', []);
+      episode = findSerialEpisode(episodeId);
 
-      episode = episodes.find(item =>
-        String(item.id) === String(episodeId)
-      ) || {
-        id: episodeId,
-        seasonNumber: slot.season || 1,
-        episodeNumber: slot.episode || 1
-      };
+      if (!episode) {
+        console.warn('Serial episode was not found.');
+        return false;
+      }
+
+      marked = markSerialEpisodePosted(episodeId);
     }
+
+    if (!marked) {
+      console.error('Could not save the episode posting status.');
+      return false;
+    }
+
+    const completedAt = new Date().toISOString();
 
     settings.completed = settings.completed || {};
 
@@ -416,17 +498,22 @@
         ? settings.completed[slotName]
         : [];
 
-    const alreadyRecorded = settings.completed[slotName].some(record =>
-      String(record.episodeId) === String(episodeId)
+    const alreadyRecorded = settings.completed[slotName].some(
+      record =>
+        String(record.episodeId) === String(episodeId)
     );
-
-    const completedAt = new Date().toISOString();
 
     if (!alreadyRecorded) {
       settings.completed[slotName].push({
         episodeId,
-        label: pending.episodeLabel || extra.episodeLabel || 'Episode',
-        title: slot.storyName || extra.storyName || '',
+        label:
+          pending.episodeLabel ||
+          extra.episodeLabel ||
+          'Episode',
+        title:
+          slot.storyName ||
+          extra.storyName ||
+          '',
         completedAt,
         tracking: 'notification-confirmed-posted'
       });
@@ -439,21 +526,39 @@
 
     settings.pending = null;
 
-    if (!writeSettings(settings)) return false;
+    if (!writeSettings(settings)) {
+      console.error('Could not save planner completion.');
+      return false;
+    }
 
     cancelPostConfirmation();
 
     try {
-      document.dispatchEvent(new Event('planner:posts-updated'));
-    } catch (_) {}
+      document.dispatchEvent(
+        new Event('planner:posts-updated')
+      );
+    } catch (error) {
+      console.warn('Could not refresh planner display:', error);
+    }
 
-    console.log('Episode marked posted from Android notification:', slotName, episodeId);
+    console.log(
+      'Episode marked posted from notification:',
+      slotName,
+      episodeId
+    );
+
     return true;
   }
 
+  /* ---------- NOTIFICATION BUTTON ACTIONS ---------- */
+
   async function handlePostNotificationAction(action) {
     const notification = action?.notification || {};
-    const extra = notification.extra || notification.data || {};
+    const extra =
+      notification.extra ||
+      notification.data ||
+      {};
+
     const actionId = action?.actionId;
 
     if (extra.kind !== 'story-post-confirmation') return;
@@ -474,11 +579,12 @@
         String(pending.episodeId) === String(extra.episodeId)
       ) {
         pending.lastConfirmationResponse = 'not-posted';
-        pending.lastConfirmationResponseAt = new Date().toISOString();
+        pending.lastConfirmationResponseAt =
+          new Date().toISOString();
 
         writeSettings(settings);
 
-        // Ask again after another five minutes until confirmed.
+        // Ask again five minutes later.
         await schedulePostConfirmation({
           slot: extra.slot,
           episodeId: extra.episodeId
@@ -490,12 +596,16 @@
     }
   }
 
+  /* ---------- ACTION LISTENER ---------- */
+
   async function setupPostActionListener() {
     if (actionListenerReady || !isAndroidApp()) return;
 
     const plugin = getPlugin();
 
-    if (!plugin || typeof plugin.addListener !== 'function') return;
+    if (!plugin || typeof plugin.addListener !== 'function') {
+      return;
+    }
 
     try {
       await registerPostActions(plugin);
@@ -508,58 +618,14 @@
       actionListenerReady = true;
 
     } catch (error) {
-      console.error('Could not attach post notification action listener:', error);
+      console.error(
+        'Could not attach notification action listener:',
+        error
+      );
     }
   }
 
-  function watchWhatsAppOpening() {
-    if (originalWindowOpen || typeof window.open !== 'function') return;
-
-    originalWindowOpen = window.open.bind(window);
-
-    window.open = function (url, target, features) {
-      try {
-        const settings = readSettings();
-        const pending = settings.pending;
-
-        const launchTime = Number(pending?.launchRequestedAt || 0);
-        const launchAge = Date.now() - launchTime;
-
-        const isWhatsApp = /whatsapp|wa\.me/i.test(String(url || ''));
-
-        if (
-          isWhatsApp &&
-          pending &&
-          pending.stage === 'episode-opened' &&
-          launchTime > 0 &&
-          launchAge >= 0 &&
-          launchAge <= WHATSAPP_LAUNCH_WINDOW_MS
-        ) {
-          schedulePostConfirmation({
-            slot: pending.slot,
-            episodeId: pending.episodeId
-          });
-        }
-
-      } catch (error) {
-        console.warn('Could not start post confirmation countdown:', error);
-      }
-
-      return originalWindowOpen(url, target, features);
-    };
-  }
-
-  function monitorPostReminder() {
-    const settings = readSettings();
-    const pending = settings.pending;
-
-    if (
-      !pending ||
-      pending.stage !== 'episode-opened'
-    ) {
-      cancelPostConfirmation();
-    }
-  }
+  /* ---------- EXACT ALARM SETTINGS ---------- */
 
   async function requestExactAlarmAccess() {
     if (!isAndroidApp()) {
@@ -624,13 +690,15 @@
     }
   }
 
+  /* ---------- DAILY SLOT REMINDERS ---------- */
+
   async function sync() {
     if (!isAndroidApp() || syncing) return;
 
     const plugin = getPlugin();
 
     if (!plugin) {
-      console.warn('Android Local Notifications plugin unavailable.');
+      console.warn('Local Notifications plugin unavailable.');
       return;
     }
 
@@ -652,7 +720,7 @@
 
       if (!exactAllowed) {
         console.warn(
-          'Exact alarm access is not enabled. Use the planner permission button.'
+          'Exact alarm access is not enabled.'
         );
         return;
       }
@@ -682,15 +750,18 @@
         for (let day = 0; day < 30; day++) {
           const scheduledDate = nextDate(slot.time, day);
 
-          if (!scheduledDate || scheduledDate <= new Date()) {
+          if (
+            !scheduledDate ||
+            scheduledDate <= new Date()
+          ) {
             continue;
           }
 
-          if (isCompleted(settings, slotName, scheduledDate)) {
+          if (
+            isCompleted(settings, slotName, scheduledDate)
+          ) {
             continue;
           }
-
-          const id = ID_BASE[slotName] + day;
 
           const labels = {
             morning: '🌅 Morning posting time',
@@ -699,9 +770,10 @@
           };
 
           notifications.push({
-            id,
+            id: ID_BASE[slotName] + day,
             title: labels[slotName],
-            body: 'It is time to prepare ' +
+            body:
+              'It is time to prepare ' +
               slot.storyName +
               ' in Stories Editor.',
             schedule: {
@@ -725,7 +797,7 @@
       }
 
       console.log(
-        'Android reminders synchronized:',
+        'Daily Android reminders synchronized:',
         notifications.length
       );
 
@@ -737,32 +809,49 @@
     }
   }
 
+  /* ---------- CLEANUP ---------- */
+
+  function monitorPostReminder() {
+    const pending = readSettings().pending;
+
+    if (
+      !pending ||
+      pending.stage !== 'episode-opened'
+    ) {
+      cancelPostConfirmation();
+    }
+  }
+
   function delayedSync() {
     window.setTimeout(sync, 700);
   }
+
+  /* ---------- START ---------- */
 
   function init() {
     if (!isAndroidApp()) return;
 
     setupPostActionListener();
-    watchWhatsAppOpening();
 
-    document.addEventListener('visibilitychange', () => {
-      if (!document.hidden) {
-        delayedSync();
-        monitorPostReminder();
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        if (!document.hidden) {
+          delayedSync();
+          monitorPostReminder();
+        }
       }
-    });
+    );
 
     window.addEventListener('focus', () => {
       delayedSync();
       monitorPostReminder();
     });
 
-    window.setInterval(monitorPostReminder, 3000);
+    window.setInterval(monitorPostReminder, 5000);
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', () => {
     init();
     delayedSync();
   });
@@ -780,6 +869,8 @@
     if (button) delayedSync();
   });
 
+  /* ---------- PUBLIC API ---------- */
+
   window.StoriesAndroidReminders = {
     sync,
     requestExactAlarmAccess,
@@ -787,7 +878,7 @@
     checkExactAlarmPermission: async function () {
       const plugin = getPlugin();
 
-      if (!plugin) return false;
+      if (!plugin || !isAndroidApp()) return false;
 
       return checkExactAlarmPermission(plugin);
     },
