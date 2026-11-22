@@ -221,7 +221,7 @@
 
   async function initializeCloud() {
     if (!window.StudioStore) {
-      await loadScript('js/storage.js');
+      await loadScript('./storage.js');
     }
 
     if (!window.StudioStore) {
@@ -245,7 +245,7 @@
     }
 
     if (!window.ChannelStudioCloud) {
-      await loadScript('js/supabase-cloud.js');
+      await loadScript('./supabase-cloud.js');
     }
 
     cloud = window.ChannelStudioCloud;
