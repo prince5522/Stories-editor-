@@ -1,11 +1,12 @@
 /* =====================================================
    STORIES EDITOR — APP SHELL BEHAVIOUR
-   Shared sidebar navigation
    Android safe area
+   Planner notification routing
    Global wallpaper restoration
-   Reliable notification routing
-   Publishing is handled ONLY by planner-publish.js
-   Preserves existing wallpaper data.
+
+   IMPORTANT:
+   Sidebar navigation is handled by app.js.
+   Do not add another sidebar click handler here.
 ===================================================== */
 
 (function () {
@@ -24,99 +25,6 @@ let notificationRetryCount = 0;
 
 const MAX_NOTIFICATION_RETRIES = 20;
 const NOTIFICATION_RETRY_DELAY = 500;
-
-/* ---------- SHARED SIDEBAR NAVIGATION ---------- */
-
-function setupSidebarNavigation() {
-  const menuToggle = document.getElementById('menuToggle');
-  const sidebar = document.querySelector('.sidebar');
-
-  if (!sidebar) return;
-
-  // Highlight the page currently being viewed.
-  const currentPage =
-    window.location.pathname.split('/').pop() || 'index.html';
-
-  sidebar.querySelectorAll('.nav-link').forEach(link => {
-    const href = link.getAttribute('href');
-
-    if (!href) return;
-
-    const linkPage = href.split('/').pop().split('?')[0];
-
-    link.classList.toggle(
-      'active',
-      linkPage === currentPage
-    );
-  });
-
-  if (!menuToggle || menuToggle.dataset.wired === '1') {
-    return;
-  }
-
-  // Mark this button so app.js does not attach a duplicate handler.
-  menuToggle.dataset.wired = '1';
-
-  menuToggle.setAttribute('aria-controls', 'appSidebar');
-  menuToggle.setAttribute('aria-expanded', 'false');
-
-  if (!sidebar.id) {
-    sidebar.id = 'appSidebar';
-  }
-
-  function closeSidebar() {
-    sidebar.classList.remove('open');
-    menuToggle.setAttribute('aria-expanded', 'false');
-    menuToggle.setAttribute('aria-label', 'Open navigation');
-  }
-
-  function openSidebar() {
-    sidebar.classList.add('open');
-    menuToggle.setAttribute('aria-expanded', 'true');
-    menuToggle.setAttribute('aria-label', 'Close navigation');
-  }
-
-  menuToggle.addEventListener('click', function (event) {
-    event.preventDefault();
-    event.stopPropagation();
-
-    if (sidebar.classList.contains('open')) {
-      closeSidebar();
-    } else {
-      openSidebar();
-    }
-  });
-
-  // Close after choosing a page.
-  sidebar.querySelectorAll('a.nav-link').forEach(link => {
-    link.addEventListener('click', closeSidebar);
-  });
-
-  // Close when tapping outside the sidebar.
-  document.addEventListener('click', function (event) {
-    if (
-      sidebar.classList.contains('open') &&
-      !sidebar.contains(event.target) &&
-      !menuToggle.contains(event.target)
-    ) {
-      closeSidebar();
-    }
-  });
-
-  // Close with the Escape key.
-  document.addEventListener('keydown', function (event) {
-    if (event.key === 'Escape') {
-      closeSidebar();
-    }
-  });
-
-  // Keep the menu closed when switching to desktop width.
-  window.addEventListener('resize', function () {
-    if (window.innerWidth > 650) {
-      closeSidebar();
-    }
-  });
-}
 
 /* ---------- ANDROID SAFE AREA ---------- */
 
@@ -366,7 +274,7 @@ function registerAndroidNotificationClicks() {
         notificationRetryCount = 0;
 
         console.info(
-          'Story Studio: Android notification clicks are ready.'
+          'Stories Editor: Android notification clicks are ready.'
         );
       })
       .catch(error => {
@@ -555,8 +463,8 @@ function loadGlobalWallpaper() {
 /* ---------- STARTUP ---------- */
 
 function start() {
-  // Run navigation before other page-specific scripts.
-  setupSidebarNavigation();
+  // Sidebar is intentionally NOT initialized here.
+  // The original sidebar handler in app.js owns it.
 
   applyAndroidSafeArea();
   registerAndroidNotificationClicks();
@@ -564,10 +472,7 @@ function start() {
   handlePlannerNotificationQuery();
 }
 
-/*
-  Publishing buttons are deliberately NOT intercepted here.
-  planner-publish.js owns copying and WhatsApp navigation.
-*/
+/* ---------- EVENT LISTENERS ---------- */
 
 document.addEventListener(
   'planner:notification-opened',
