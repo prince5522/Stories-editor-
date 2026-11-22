@@ -5,18 +5,18 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-  <script src="js/app-shell-behavior.js"></script>
+  <script src="./app-shell-behavior.js"></script>
 
   <meta name="theme-color" content="#0b1424">
   <meta name="description" content="Your personal WhatsApp Channel publishing studio">
 
-  <title>Welcome — Channel Studio</title>
+  <title>Welcome — Stories Editor</title>
 
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/themes.css">
-  <link rel="stylesheet" href="css/whatsapp-shell.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./animations.css">
+  <link rel="stylesheet" href="./themes.css">
+  <link rel="stylesheet" href="./whatsapp-shell.css">
 
   <style>
     .welcome-page {
@@ -42,42 +42,35 @@
       overflow: hidden;
       border: 1px solid rgba(255,255,255,.13);
       border-radius: 30px;
-      background: linear-gradient(
-        145deg,
-        rgba(255,255,255,.105),
-        rgba(255,255,255,.035)
-      );
-      box-shadow:
-        0 28px 80px rgba(0,0,0,.36),
-        inset 0 1px 0 rgba(255,255,255,.12);
+      background: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
+      box-shadow: 0 28px 80px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.12);
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
     }
 
-    .welcome-shell::before {
-      content: "";
-      position: absolute;
-      z-index: -1;
-      width: 260px;
-      height: 260px;
-      top: -145px;
-      right: -100px;
-      border-radius: 50%;
-      background: rgba(56, 142, 255, .22);
-      filter: blur(35px);
-    }
-
+    .welcome-shell::before,
     .welcome-shell::after {
       content: "";
       position: absolute;
       z-index: -1;
+      border-radius: 50%;
+      filter: blur(35px);
+    }
+
+    .welcome-shell::before {
+      width: 260px;
+      height: 260px;
+      top: -145px;
+      right: -100px;
+      background: rgba(56, 142, 255, .22);
+    }
+
+    .welcome-shell::after {
       width: 220px;
       height: 220px;
       bottom: -150px;
       left: -100px;
-      border-radius: 50%;
       background: rgba(0, 220, 170, .15);
-      filter: blur(35px);
     }
 
     .welcome-topline {
@@ -140,9 +133,7 @@
       border-radius: 31px;
       border: 1px solid rgba(255,255,255,.35);
       background: linear-gradient(145deg, #48a5ff, #1764d5 58%, #08469e);
-      box-shadow:
-        0 16px 42px rgba(24,116,235,.38),
-        inset 0 2px 2px rgba(255,255,255,.3);
+      box-shadow: 0 16px 42px rgba(24,116,235,.38), inset 0 2px 2px rgba(255,255,255,.3);
       color: white;
       font-size: 35px;
       font-weight: 900;
@@ -163,21 +154,9 @@
       -webkit-backdrop-filter: blur(12px);
     }
 
-    .chip-one {
-      top: 28px;
-      left: 2px;
-    }
-
-    .chip-two {
-      top: 49px;
-      right: 0;
-    }
-
-    .chip-three {
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
+    .chip-one { top: 28px; left: 2px; }
+    .chip-two { top: 49px; right: 0; }
+    .chip-three { bottom: 20px; left: 50%; transform: translateX(-50%); }
 
     .welcome-eyebrow {
       margin: 13px 0 10px;
@@ -237,9 +216,7 @@
       grid-column: 1 / -1;
     }
 
-    .welcome-actions {
-      margin-top: 4px;
-    }
+    .welcome-actions { margin-top: 4px; }
 
     .welcome-cta {
       width: 100%;
@@ -264,9 +241,7 @@
       filter: brightness(1.12);
     }
 
-    .welcome-cta span {
-      font-size: 20px;
-    }
+    .welcome-cta span { font-size: 20px; }
 
     .welcome-bottom {
       display: flex;
@@ -281,9 +256,7 @@
       letter-spacing: .4px;
     }
 
-    .welcome-bottom b {
-      color: #67d9c0;
-    }
+    .welcome-bottom b { color: #67d9c0; }
 
     @media (max-width: 380px) {
       .welcome-shell {
@@ -291,18 +264,14 @@
         border-radius: 25px;
       }
 
-      .welcome-art {
-        height: 180px;
-      }
+      .welcome-art { height: 180px; }
 
       .orbit-one {
         width: 155px;
         height: 155px;
       }
 
-      .orbit-two {
-        width: 205px;
-      }
+      .orbit-two { width: 205px; }
 
       .brand-mark.welcome-logo {
         width: 88px;
@@ -317,21 +286,14 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .welcome-cta {
-        transition: none;
-      }
-
-      .floating {
-        animation: none !important;
-      }
+      .welcome-cta { transition: none; }
+      .floating { animation: none !important; }
     }
   </style>
 </head>
 
 <body class="welcome-page">
-
   <main class="welcome-shell morph-in">
-
     <div class="welcome-topline">
       <span class="live-dot"></span>
       YOUR CREATOR SPACE
@@ -341,9 +303,7 @@
     <div class="welcome-art" aria-hidden="true">
       <div class="welcome-orbit orbit-one"></div>
       <div class="welcome-orbit orbit-two"></div>
-
       <div class="brand-mark welcome-logo floating">CS</div>
-
       <span class="art-chip chip-one">✍️ Create</span>
       <span class="art-chip chip-two">🔔 Stay ready</span>
       <span class="art-chip chip-three">📣 Share</span>
@@ -355,7 +315,7 @@
 
     <h1>
       Welcome to<br>
-      <span>Channel Studio</span>
+      <span>Stories Editor</span>
     </h1>
 
     <p class="welcome-copy">
@@ -370,7 +330,7 @@
     </div>
 
     <div class="welcome-actions">
-      <a class="button primary welcome-cta" href="login.html">
+      <a class="button primary welcome-cta" href="./login.html">
         Let's get started
         <span aria-hidden="true">↗</span>
       </a>
@@ -380,34 +340,29 @@
       <span>Made for creators</span>
       <span>Keep creating <b>✦</b></span>
     </div>
-
   </main>
 
-  <script src="js/storage.js"></script>
-  <script src="js/themes.js"></script>
-  <script src="js/app.js"></script>
-  <script src="js/whatsapp-shell.js"></script>
+  <script src="./storage.js"></script>
+  <script src="./themes.js"></script>
+  <script src="./app.js"></script>
+  <script src="./whatsapp-shell.js"></script>
 
   <script>
     (() => {
       'use strict';
 
-      const SELECTOR = 'body.welcome-page .welcome-shell';
+      const selector = 'body.welcome-page .welcome-shell';
 
       function removeDuplicateWelcomeCards() {
-        const cards = document.querySelectorAll(SELECTOR);
+        const cards = document.querySelectorAll(selector);
 
         cards.forEach((card, index) => {
-          if (index > 0) {
-            card.remove();
-          }
+          if (index > 0) card.remove();
         });
       }
 
-      // Run after the initial HTML has loaded.
       removeDuplicateWelcomeCards();
 
-      // Watch nested elements and later script insertions too.
       const observer = new MutationObserver(() => {
         removeDuplicateWelcomeCards();
       });
@@ -418,6 +373,5 @@
       });
     })();
   </script>
-
 </body>
 </html>
