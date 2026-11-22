@@ -1,7 +1,8 @@
 
 /* =====================================================
    STORY STUDIO — PLANNER PUBLISHING ENGINE
-   Starting-position baseline + silent WhatsApp workflow
+   Starting-position baseline + WhatsApp workflow
+   + Five-minute post confirmation reminder
 ===================================================== */
 
 (function () {
@@ -219,8 +220,6 @@ function storyEpisodes(slot) {
     );
   }
 
-  // Serial episodes before the configured starting point
-  // are passed over by this Planner queue.
   return episodes.filter(ep =>
     !isBeforeStartingPosition(ep, slot)
   );
@@ -283,6 +282,23 @@ function episodeText(ep, type) {
   ].join('\n\n');
 }
 
+/* ---------- NOTIFICATION HELPERS ---------- */
+
+function scheduleEpisodeConfirmation(slotName, ep) {
+  if (!ep || !window.StoriesAndroidReminders?.schedulePostConfirmation) {
+    return;
+  }
+
+  window.StoriesAndroidReminders.schedulePostConfirmation({
+    slot: slotName,
+    episodeId: ep.id
+  });
+}
+
+function cancelEpisodeConfirmation() {
+  window.StoriesAndroidReminders?.cancelPostConfirmation?.();
+}
+
 /* ---------- WHATSAPP AND CLIPBOARD ---------- */
 
 function openChannel(url) {
@@ -301,6 +317,15 @@ function openChannel(url) {
     settings.pending.leftAppAt = null;
     settings.pending.returnPrompted = false;
     saveSettings();
+
+    // The reminder begins only when the episode is opened.
+    // Opening the advertisement does not start this timer.
+    if (settings.pending.stage === 'episode-opened') {
+      scheduleEpisodeConfirmation(
+        settings.pending.slot,
+        { id: settings.pending.episodeId }
+      );
+    }
   }
 
   try {
@@ -566,6 +591,7 @@ function advancePosition(slot, ep) {
       slot.season = Number(next.season_number || 1);
       slot.episode = Number(next.episode_number || 1);
     } else {
+      // Ready-Made stories have no 13-episode season limit.
       slot.season = p.season;
       slot.episode = p.episode + 1;
     }
@@ -651,6 +677,9 @@ function completeEpisodeOnReturn(slotName) {
   settings.pending = null;
   saveSettings();
 
+  // Cancel the scheduled reminder because the app detected a return.
+  cancelEpisodeConfirmation();
+
   document.dispatchEvent(new Event('planner:posts-updated'));
   return true;
 }
@@ -691,7 +720,7 @@ function ensureRecoveryPanel() {
   panel.style.margin = '12px 0';
   panel.style.padding = '14px';
   panel.style.borderRadius = '14px';
-  panel.style.border =
+  panel.style.border = 
     '1px solid var(--border, rgba(128,128,128,.35))';
   panel.style.display = 'none';
 
@@ -765,6 +794,7 @@ function cancelAnyPending() {
 
   settings.pending = null;
   saveSettings();
+  cancelEpisodeConfirmation();
   renderPostingControls();
 
   window.studioToast?.(
@@ -913,7 +943,7 @@ function renderPostingControls() {
         </p>
         <p class="small muted">
           Return to Story Studio after WhatsApp.
-          The queue will advance automatically when you return.
+          If you do not return, your phone will ask whether you posted it.
         </p>
         <button type="button" class="button ghost"
           data-cancel-sequence="${slotName}">
@@ -1081,7 +1111,7 @@ function init() {
   }, 15000);
 
   console.log(
-    'Story Studio: planner queues, starting-position baseline and clipboard publishing loaded.'
+    'Story Studio: planner queues, starting-position baseline and notification publishing loaded.'
   );
 }
 
