@@ -53,6 +53,32 @@ jobs:
       - name: Synchronize Android project
         run: npx cap sync android
 
+      - name: Install image tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y imagemagick
+
+      - name: Apply Stories Editor launcher icon
+        run: |
+          set -e
+
+          for item in "mdpi 48" "hdpi 72" "xhdpi 96" "xxhdpi 144" "xxxhdpi 192"; do
+            set -- $item
+            density=$1
+            size=$2
+
+            mkdir -p "android/app/src/main/res/mipmap-$density"
+
+            convert icon-512.png -resize "${size}x${size}" \
+              "android/app/src/main/res/mipmap-$density/ic_launcher.png"
+
+            convert icon-512.png -resize "${size}x${size}" \
+              "android/app/src/main/res/mipmap-$density/ic_launcher_round.png"
+
+            convert icon-512.png -resize "${size}x${size}" \
+              "android/app/src/main/res/mipmap-$density/ic_launcher_foreground.png"
+          done
+
       - name: Build APK
         working-directory: android
         run: |
