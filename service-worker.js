@@ -1,7 +1,7 @@
 
 /* =====================================================
    STORIES EDITOR — SERVICE WORKER
-   Version: 32
+   Version: 33
 
    Features:
    - Offline page support
@@ -16,19 +16,13 @@
 
 'use strict';
 
-/* =====================================================
-   CACHE CONFIGURATION
-===================================================== */
+/* CACHE CONFIGURATION */
 
-const CACHE_VERSION = 'channel-studio-shell-v32';
+const CACHE_VERSION = 'channel-studio-shell-v33';
 const CACHE_PREFIX = 'channel-studio-shell-';
-
 const FETCH_TIMEOUT = 8000;
 
-/* =====================================================
-   APPLICATION PAGES
-   All files are stored in the repository root.
-===================================================== */
+/* APPLICATION PAGES */
 
 const PAGES = [
   './',
@@ -52,9 +46,7 @@ const PAGES = [
   'accounts.html'
 ];
 
-/* =====================================================
-   CSS FILES
-===================================================== */
+/* CSS FILES */
 
 const STYLES = [
   'styles.css',
@@ -64,10 +56,7 @@ const STYLES = [
   'ready-made.css'
 ];
 
-/* =====================================================
-   JAVASCRIPT FILES
-   Only existing repository files are included.
-===================================================== */
+/* JAVASCRIPT FILES */
 
 const SCRIPTS = [
   'app-shell-behavior.js',
@@ -81,6 +70,8 @@ const SCRIPTS = [
   'app.js',
   'backup.js',
   'backup-reliability.js',
+  'cloud-backup.js',
+  'backup-reminders.js',
   'android-import.js',
   'story-engine.js',
   'story-split-post.js',
@@ -102,9 +93,7 @@ const SCRIPTS = [
   'story-runway-alerts.js'
 ];
 
-/* =====================================================
-   OTHER APPLICATION FILES
-===================================================== */
+/* OTHER APPLICATION FILES */
 
 const OTHER_FILES = [
   'manifest.webmanifest',
@@ -119,15 +108,10 @@ const CORE_FILES = [
   ...OTHER_FILES
 ];
 
-/* =====================================================
-   HELPER FUNCTIONS
-===================================================== */
+/* HELPER FUNCTIONS */
 
 function makeURL(path) {
-  return new URL(
-    path,
-    self.registration.scope
-  ).href;
+  return new URL(path, self.registration.scope).href;
 }
 
 async function fetchWithTimeout(resource) {
@@ -148,15 +132,10 @@ async function fetchWithTimeout(resource) {
 }
 
 async function saveResponse(cache, request, response) {
-  if (!response || !response.ok) {
-    return;
-  }
+  if (!response || !response.ok) return;
 
   try {
-    await cache.put(
-      request,
-      response.clone()
-    );
+    await cache.put(request, response.clone());
   } catch (error) {
     console.warn(
       '[Stories Editor] Could not cache:',
@@ -169,35 +148,24 @@ async function saveResponse(cache, request, response) {
 function isCodeAsset(request, url) {
   const destination = request.destination || '';
 
-  if (
-    destination === 'script' ||
-    destination === 'style'
-  ) {
+  if (destination === 'script' || destination === 'style') {
     return true;
   }
 
   return /\.(js|css)$/i.test(url.pathname);
 }
 
-/* =====================================================
-   INSTALL
-===================================================== */
+/* INSTALL */
 
 self.addEventListener('install', event => {
   event.waitUntil((async () => {
     const cache = await caches.open(CACHE_VERSION);
 
-    console.log(
-      '[Stories Editor] Installing version 32...'
-    );
+    console.log('[Stories Editor] Installing version 33...');
 
-    /* ---------------------------------------------
-       MIGRATE PREVIOUS CACHE CONTENT
-    --------------------------------------------- */
+    /* MIGRATE PREVIOUS CACHE CONTENT */
 
-    const oldCaches = (
-      await caches.keys()
-    ).filter(name =>
+    const oldCaches = (await caches.keys()).filter(name =>
       name.startsWith(CACHE_PREFIX) &&
       name !== CACHE_VERSION
     );
@@ -209,17 +177,12 @@ self.addEventListener('install', event => {
 
         for (const request of requests) {
           try {
-            if (await cache.match(request)) {
-              continue;
-            }
+            if (await cache.match(request)) continue;
 
             const response = await oldCache.match(request);
 
             if (response) {
-              await cache.put(
-                request,
-                response
-              );
+              await cache.put(request, response);
             }
           } catch (error) {
             console.warn(
@@ -238,9 +201,7 @@ self.addEventListener('install', event => {
       }
     }
 
-    /* ---------------------------------------------
-       DOWNLOAD CORE APPLICATION FILES
-    --------------------------------------------- */
+    /* DOWNLOAD CORE APPLICATION FILES */
 
     const results = await Promise.allSettled(
       CORE_FILES.map(async path => {
@@ -250,11 +211,7 @@ self.addEventListener('install', event => {
           const response = await fetchWithTimeout(url);
 
           if (response && response.ok) {
-            await saveResponse(
-              cache,
-              url,
-              response
-            );
+            await saveResponse(cache, url, response);
           } else {
             console.warn(
               '[Stories Editor] File unavailable:',
@@ -279,13 +236,10 @@ self.addEventListener('install', event => {
     );
 
     await self.skipWaiting();
-
   })());
 });
 
-/* =====================================================
-   ACTIVATE
-===================================================== */
+/* ACTIVATE */
 
 self.addEventListener('activate', event => {
   event.waitUntil((async () => {
@@ -304,9 +258,7 @@ self.addEventListener('activate', event => {
 
     await self.clients.claim();
 
-    console.log(
-      '[Stories Editor] Version 32 activated.'
-    );
+    console.log('[Stories Editor] Version 33 activated.');
 
     /* Notify open application windows. */
 
@@ -321,13 +273,10 @@ self.addEventListener('activate', event => {
         version: CACHE_VERSION
       });
     });
-
   })());
 });
 
-/* =====================================================
-   UPDATE MESSAGES
-===================================================== */
+/* UPDATE MESSAGES */
 
 self.addEventListener('message', event => {
   const message = event.data;
@@ -337,10 +286,7 @@ self.addEventListener('message', event => {
     return;
   }
 
-  if (
-    message &&
-    message.type === 'GET_VERSION'
-  ) {
+  if (message && message.type === 'GET_VERSION') {
     event.source?.postMessage({
       type: 'SERVICE_WORKER_VERSION',
       version: CACHE_VERSION
@@ -348,14 +294,10 @@ self.addEventListener('message', event => {
   }
 });
 
-/* =====================================================
-   OFFLINE FALLBACK
-===================================================== */
+/* OFFLINE FALLBACK */
 
 async function offlineResponse(request) {
   const cache = await caches.open(CACHE_VERSION);
-
-  /* Try the exact requested page first. */
 
   if (request.mode === 'navigate') {
     const cachedPage = await cache.match(
@@ -363,29 +305,13 @@ async function offlineResponse(request) {
       { ignoreSearch: true }
     );
 
-    if (cachedPage) {
-      return cachedPage;
-    }
+    if (cachedPage) return cachedPage;
 
-    /* Try the home page. */
+    const home = await cache.match(makeURL('home.html'));
+    if (home) return home;
 
-    const home = await cache.match(
-      makeURL('home.html')
-    );
-
-    if (home) {
-      return home;
-    }
-
-    /* Try the welcome page. */
-
-    const welcome = await cache.match(
-      makeURL('index.html')
-    );
-
-    if (welcome) {
-      return welcome;
-    }
+    const welcome = await cache.match(makeURL('index.html'));
+    if (welcome) return welcome;
 
     return new Response(
       '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title></head><body><h1>Stories Editor is offline</h1><p>This page has not been saved for offline use yet. Reconnect to the internet and try again.</p></body></html>',
@@ -398,16 +324,12 @@ async function offlineResponse(request) {
     );
   }
 
-  /* Try the cached resource. */
-
   const cachedResource = await cache.match(
     request,
     { ignoreSearch: true }
   );
 
-  if (cachedResource) {
-    return cachedResource;
-  }
+  if (cachedResource) return cachedResource;
 
   return new Response(
     'This resource is not available offline.',
@@ -420,51 +342,34 @@ async function offlineResponse(request) {
   );
 }
 
-/* =====================================================
-   FETCH HANDLER
-===================================================== */
+/* FETCH HANDLER */
 
 self.addEventListener('fetch', event => {
   const request = event.request;
 
-  /* Only handle GET requests. */
-
-  if (request.method !== 'GET') {
-    return;
-  }
+  if (request.method !== 'GET') return;
 
   const url = new URL(request.url);
 
   /* Do not intercept external websites or CDNs. */
 
-  if (url.origin !== self.location.origin) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
 
   /* Do not interfere with partial media requests. */
 
-  if (request.headers.has('range')) {
-    return;
-  }
+  if (request.headers.has('range')) return;
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_VERSION);
 
-    /* ---------------------------------------------
-       HTML PAGES — NETWORK FIRST
-    --------------------------------------------- */
+    /* HTML PAGES — NETWORK FIRST */
 
     if (request.mode === 'navigate') {
       try {
         const response = await fetchWithTimeout(request);
 
         if (response && response.ok) {
-          await saveResponse(
-            cache,
-            request,
-            response
-          );
-
+          await saveResponse(cache, request, response);
           return response;
         }
       } catch (error) {
@@ -477,21 +382,14 @@ self.addEventListener('fetch', event => {
       return offlineResponse(request);
     }
 
-    /* ---------------------------------------------
-       JAVASCRIPT AND CSS — NETWORK FIRST
-    --------------------------------------------- */
+    /* JAVASCRIPT AND CSS — NETWORK FIRST */
 
     if (isCodeAsset(request, url)) {
       try {
         const response = await fetchWithTimeout(request);
 
         if (response && response.ok) {
-          await saveResponse(
-            cache,
-            request,
-            response
-          );
-
+          await saveResponse(cache, request, response);
           return response;
         }
       } catch (error) {
@@ -504,9 +402,7 @@ self.addEventListener('fetch', event => {
       return offlineResponse(request);
     }
 
-    /* ---------------------------------------------
-       OTHER FILES — CACHE FIRST
-    --------------------------------------------- */
+    /* OTHER FILES — CACHE FIRST */
 
     const cached = await cache.match(
       request,
@@ -514,16 +410,10 @@ self.addEventListener('fetch', event => {
     );
 
     if (cached) {
-      /* Refresh the cached copy in the background. */
-
       event.waitUntil(
         fetchWithTimeout(request)
           .then(response =>
-            saveResponse(
-              cache,
-              request,
-              response
-            )
+            saveResponse(cache, request, response)
           )
           .catch(() => {
             // Keep the existing offline copy.
@@ -533,33 +423,23 @@ self.addEventListener('fetch', event => {
       return cached;
     }
 
-    /* ---------------------------------------------
-       RESOURCE NOT CACHED — NETWORK
-    --------------------------------------------- */
+    /* RESOURCE NOT CACHED — NETWORK */
 
     try {
       const response = await fetchWithTimeout(request);
 
       if (response && response.ok) {
-        await saveResponse(
-          cache,
-          request,
-          response
-        );
+        await saveResponse(cache, request, response);
       }
 
       return response;
-
     } catch (error) {
       return offlineResponse(request);
     }
-
   })());
 });
 
-/* =====================================================
-   NOTIFICATION CLICK
-===================================================== */
+/* NOTIFICATION CLICK */
 
 self.addEventListener('notificationclick', event => {
   event.notification.close();
@@ -580,16 +460,13 @@ self.addEventListener('notificationclick', event => {
 
       if (
         targetURL.origin !== self.location.origin ||
-        !targetURL.href.startsWith(
-          self.registration.scope
-        )
+        !targetURL.href.startsWith(self.registration.scope)
       ) {
         targetURL = new URL(
           'planner.html',
           self.registration.scope
         );
       }
-
     } catch (error) {
       targetURL = new URL(
         'planner.html',
@@ -604,17 +481,13 @@ self.addEventListener('notificationclick', event => {
 
     for (const client of windows) {
       if (
-        client.url.startsWith(
-          self.registration.scope
-        ) &&
+        client.url.startsWith(self.registration.scope) &&
         'focus' in client
       ) {
         await client.focus();
 
         if ('navigate' in client) {
-          await client.navigate(
-            targetURL.href
-          );
+          await client.navigate(targetURL.href);
         }
 
         return;
@@ -622,10 +495,7 @@ self.addEventListener('notificationclick', event => {
     }
 
     if (self.clients.openWindow) {
-      await self.clients.openWindow(
-        targetURL.href
-      );
+      await self.clients.openWindow(targetURL.href);
     }
-
   })());
 });
