@@ -1,8 +1,11 @@
 
 /* =====================================================
-   STORIES EDITOR — FULL SUPABASE CLOUD BACKUP
-   Uses app_backups table and the existing Supabase login.
-   Local records are never deleted by this file.
+   STORIES EDITOR — SUPABASE CLOUD BACKUP
+   Version 2.0
+   - Full local-record snapshots
+   - Safe array merging
+   - Restores missing records by ID
+   - Preserves existing local data
 ===================================================== */
 
 (function () {
@@ -37,8 +40,14 @@
 
   function isEmpty(value) {
     if (value === null || value === undefined) return true;
-    if (typeof value === 'string') return !value.trim();
-    if (Array.isArray(value)) return value.length === 0;
+
+    if (typeof value === 'string') {
+      return !value.trim();
+    }
+
+    if (Array.isArray(value)) {
+      return value.length === 0;
+    }
 
     if (isPlainObject(value)) {
       return Object.values(value).every(isEmpty);
@@ -51,7 +60,101 @@
     return JSON.parse(JSON.stringify(value));
   }
 
+  function sameValue(a, b) {
+    try {
+      return JSON.stringify(a) === JSON.stringify(b);
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /*
+   * Only use stable record identifiers.
+   * Do not match records by title or text alone.
+   */
+  function getIdentity(item) {
+    if (!isPlainObject(item)) return null;
+
+    const fields = ['id', 'uuid', '_id', 'recordId'];
+
+    for (const field of fields) {
+      const value = item[field];
+
+      if (
+        value !== undefined &&
+        value !== null &&
+        String(value).trim() !== ''
+      ) {
+        return field + ':' + String(value);
+      }
+    }
+
+    return null;
+  }
+
+  /*
+   * Merge arrays without replacing existing items.
+   *
+   * Matching IDs:
+   *   Merge missing fields into the existing item.
+   *
+   * Items without IDs:
+   *   Add only when an identical item is not present.
+   *
+   * Existing local order is preserved.
+   */
+  function mergeArrays(current, incoming) {
+    if (!Array.isArray(current)) {
+      return isEmpty(current) ? clone(incoming) : clone(current);
+    }
+
+    const result = clone(current);
+
+    for (const incomingItem of incoming) {
+      const identity = getIdentity(incomingItem);
+
+      if (identity !== null) {
+        const index = result.findIndex(
+          item => getIdentity(item) === identity
+        );
+
+        if (index !== -1) {
+          result[index] = mergeMissing(
+            result[index],
+            incomingItem
+          );
+        } else {
+          result.push(clone(incomingItem));
+        }
+
+        continue;
+      }
+
+      const alreadyExists = result.some(
+        item => sameValue(item, incomingItem)
+      );
+
+      if (!alreadyExists) {
+        result.push(clone(incomingItem));
+      }
+    }
+
+    return result;
+  }
+
+  /*
+   * Safe recursive merge.
+   * Existing non-empty local values take priority.
+   */
   function mergeMissing(current, incoming) {
+    if (isEmpty(current)) {
+      return clone(incoming);
+    }
+
+    if (Array.isArray(current) && Array.isArray(incoming)) {
+      return mergeArrays(current, incoming);
+    }
+
     if (isPlainObject(current) && isPlainObject(incoming)) {
       const result = clone(current);
 
@@ -61,18 +164,20 @@
           isEmpty(result[key])
         ) {
           result[key] = clone(incoming[key]);
-        } else if (
-          isPlainObject(result[key]) &&
-          isPlainObject(incoming[key])
-        ) {
-          result[key] = mergeMissing(result[key], incoming[key]);
+        } else {
+          result[key] = mergeMissing(
+            result[key],
+            incoming[key]
+          );
         }
       }
 
       return result;
     }
 
-    return isEmpty(current) ? clone(incoming) : clone(current);
+    // Never replace an existing non-empty value
+    // with a different value from an older backup.
+    return clone(current);
   }
 
   async function getAccount() {
@@ -83,21 +188,27 @@
     const ready = await cloud.ready;
 
     if (ready && ready.online === false) {
-      throw new Error(ready.error || 'Supabase is unavailable.');
+      throw new Error(
+        ready.error || 'Supabase is unavailable.'
+      );
     }
 
     if (cloud.waitForCloudSync) {
       const sync = await cloud.waitForCloudSync();
 
       if (sync && sync.success === false) {
-        throw new Error(sync.error || 'Account synchronization failed.');
+        throw new Error(
+          sync.error || 'Account synchronization failed.'
+        );
       }
     }
 
     const user = await cloud.getUser();
 
     if (!user || user.is_anonymous) {
-      throw new Error('Sign in with your registered email account first.');
+      throw new Error(
+        'Sign in with your registered email account first.'
+      );
     }
 
     const client = cloud.getClient();
@@ -109,6 +220,11 @@
     return { user, client };
   }
 
+  /*
+   * Collect every record managed by StudioStore.
+   * Binary media stored separately in IndexedDB
+   * is not included in this snapshot.
+   */
   async function createSnapshot() {
     await store.ready;
     await store.flush();
@@ -118,14 +234,16 @@
       : store.all();
 
     if (!records || !Object.keys(records).length) {
-      throw new Error('There is no local app data to back up.');
+      throw new Error(
+        'There is no local app data to back up.'
+      );
     }
 
     return {
       application: 'Story Studio',
       format: 'story-studio-backup',
       version: 2,
-      cloudBackupVersion: 1,
+      cloudBackupVersion: 2,
       exportedAt: new Date().toISOString(),
       records: records
     };
@@ -134,12 +252,14 @@
   async function uploadBackup() {
     const { user, client } = await getAccount();
     const snapshot = await createSnapshot();
+
     const json = JSON.stringify(snapshot);
     const bytes = new Blob([json]).size;
 
     if (bytes > MAX_BACKUP_BYTES) {
       throw new Error(
-        'This backup is larger than 5 MB. Export a local JSON backup and contact us before uploading a larger backup.'
+        'This backup is larger than 5 MB. ' +
+        'Export a local JSON backup and keep it safe.'
       );
     }
 
@@ -148,7 +268,7 @@
       .insert({
         user_id: user.id,
         backup_data: snapshot,
-        backup_version: 1,
+        backup_version: 2,
         record_count: Object.keys(snapshot.records).length
       })
       .select('id, created_at, record_count')
@@ -196,18 +316,25 @@
       row.className = 'cloud-backup-item';
 
       const info = document.createElement('div');
-      const date = document.createElement('strong');
-      const count = document.createElement('p');
 
-      date.textContent = new Date(item.created_at).toLocaleString();
-      count.textContent = item.record_count + ' data sections';
+      const date = document.createElement('strong');
+      date.textContent = new Date(
+        item.created_at
+      ).toLocaleString();
+
+      const count = document.createElement('p');
+      count.textContent =
+        item.record_count + ' data sections';
 
       info.append(date, count);
 
       const restore = document.createElement('button');
       restore.type = 'button';
       restore.textContent = 'Restore';
-      restore.addEventListener('click', () => restoreBackup(item.id));
+
+      restore.addEventListener('click', () => {
+        restoreBackup(item.id);
+      });
 
       row.append(info, restore);
       list.appendChild(row);
@@ -221,8 +348,10 @@
 
     const confirmed = window.confirm(
       'Restore this cloud backup into this device?\n\n' +
-      'Existing non-empty local data will be preserved. ' +
-      'Missing or empty sections may be filled from the cloud backup.'
+      'Missing records and array items will be added. ' +
+      'Existing local records and non-empty values ' +
+      'will be preserved.\n\n' +
+      'It is recommended to export a local backup first.'
     );
 
     if (!confirmed) return;
@@ -247,14 +376,19 @@
         backup.format !== 'story-studio-backup' ||
         !isPlainObject(backup.records)
       ) {
-        throw new Error('The selected cloud backup is invalid.');
+        throw new Error(
+          'The selected cloud backup is invalid.'
+        );
       }
 
       if (backup.version !== 2) {
-        throw new Error('This cloud backup version is not supported.');
+        throw new Error(
+          'This cloud backup version is not supported.'
+        );
       }
 
       const current = await store.allAsync();
+
       let restored = 0;
       let preserved = 0;
 
@@ -269,29 +403,34 @@
           continue;
         }
 
+        const incoming = backup.records[key];
+
         if (
-          !Object.prototype.hasOwnProperty.call(current, key) ||
+          !Object.prototype.hasOwnProperty.call(
+            current,
+            key
+          ) ||
           isEmpty(current[key])
         ) {
-          store.set(key, clone(backup.records[key]));
+          store.set(key, clone(incoming));
           restored++;
           continue;
         }
 
-        if (
-          isPlainObject(current[key]) &&
-          isPlainObject(backup.records[key])
-        ) {
-          const merged = mergeMissing(
-            current[key],
-            backup.records[key]
-          );
+        const merged = mergeMissing(
+          current[key],
+          incoming
+        );
 
-          if (JSON.stringify(merged) !== JSON.stringify(current[key])) {
-            store.set(key, merged);
+        if (!sameValue(merged, current[key])) {
+          const saved = store.set(key, merged);
+
+          if (saved) {
             restored++;
           } else {
-            preserved++;
+            throw new Error(
+              'Could not save restored section: ' + key
+            );
           }
         } else {
           preserved++;
@@ -301,21 +440,28 @@
       await store.flush();
 
       show(
-        'Cloud restore finished. ' + restored +
-        ' sections restored or filled; ' +
-        preserved + ' existing sections preserved. Reload the app to refresh its pages.'
+        'Cloud restore finished. ' +
+        restored + ' sections restored or merged; ' +
+        preserved + ' sections already preserved. ' +
+        'Reload the app to refresh its pages.'
       );
 
     } catch (error) {
       console.error('Cloud restore failed:', error);
-      show(error.message || 'Cloud restore failed.', true);
+
+      show(
+        error.message || 'Cloud restore failed.',
+        true
+      );
     }
   }
 
   async function run(action) {
-    const button = $('cloudBackupUpload');
+    const upload = $('cloudBackupUpload');
+    const refresh = $('cloudBackupRefresh');
 
-    if (button) button.disabled = true;
+    if (upload) upload.disabled = true;
+    if (refresh) refresh.disabled = true;
 
     try {
       if (action === 'upload') {
@@ -326,9 +472,14 @@
       }
     } catch (error) {
       console.error('Cloud backup error:', error);
-      show(error.message || 'Cloud backup operation failed.', true);
+
+      show(
+        error.message || 'Cloud backup operation failed.',
+        true
+      );
     } finally {
-      if (button) button.disabled = false;
+      if (upload) upload.disabled = false;
+      if (refresh) refresh.disabled = false;
     }
   }
 
@@ -337,11 +488,15 @@
     const refresh = $('cloudBackupRefresh');
 
     if (upload) {
-      upload.addEventListener('click', () => run('upload'));
+      upload.addEventListener('click', () => {
+        run('upload');
+      });
     }
 
     if (refresh) {
-      refresh.addEventListener('click', () => run('list'));
+      refresh.addEventListener('click', () => {
+        run('list');
+      });
     }
 
     if (upload || refresh) {
@@ -350,7 +505,10 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initialize);
+    document.addEventListener(
+      'DOMContentLoaded',
+      initialize
+    );
   } else {
     initialize();
   }
