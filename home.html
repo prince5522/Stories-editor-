@@ -5,23 +5,19 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-  <script src="js/app-shell-behavior.js"></script>
+  <script src="./app-shell-behavior.js"></script>
 
   <meta name="theme-color" content="#101827">
   <meta name="description" content="Channel Studio — Your stories, your schedule, your channel.">
   <title>Home — Channel Studio</title>
 
-  <link rel="manifest" href="manifest.webmanifest">
-  <link rel="stylesheet" href="css/styles.css">
-  <link rel="stylesheet" href="css/animations.css">
-  <link rel="stylesheet" href="css/themes.css">
-  <link rel="stylesheet" href="css/whatsapp-shell.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./animations.css">
+  <link rel="stylesheet" href="./themes.css">
+  <link rel="stylesheet" href="./whatsapp-shell.css">
 
   <style>
-    /* =========================================
-       CHANNEL STUDIO — PREMIUM DASHBOARD
-    ========================================= */
-
     .page-content {
       width: 100%;
       max-width: 1250px;
@@ -385,7 +381,6 @@
       flex-shrink: 0;
     }
 
-    /* Dark theme */
     body[data-theme="dark"] .home-welcome {
       color: #f1f5fb;
       border-color: #35465d;
@@ -436,14 +431,12 @@
       background: #173d3a;
     }
 
-    /* Tablet */
     @media (max-width:800px) {
       .home-quick-grid {
         grid-template-columns: repeat(2,minmax(0,1fr));
       }
     }
 
-    /* Mobile */
     @media (max-width:650px) {
       .home-welcome {
         min-height: 205px;
@@ -575,9 +568,8 @@
 
 <div class="app-layout">
 
-  <!-- SIDEBAR -->
   <aside class="sidebar">
-    <a class="brand" href="home.html">
+    <a class="brand" href="./home.html">
       <span class="brand-mark small-mark">CS</span>
       <span>
         Channel<span class="brand-accent">Studio</span>
@@ -586,29 +578,28 @@
     </a>
 
     <nav class="main-nav" aria-label="Main navigation">
-      <a class="nav-link active" href="home.html"><span>⌂</span><b>Home</b></a>
-      <a class="nav-link" href="stories.html"><span>▤</span><b>Stories</b></a>
-      <a class="nav-link" href="episodes.html"><span>▥</span><b>Episodes</b></a>
-      <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-      <a class="nav-link" href="planner.html"><span>◷</span><b>Planner</b></a>
-      <a class="nav-link" href="hype.html"><span>↗</span><b>Hype</b></a>
-      <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
-      <a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-      <a class="nav-link" href="channels.html"><span>◎</span><b>Channels</b></a>
-      <a class="nav-link" href="complaints.html"><span>⚑</span><b>Complaints</b></a>
-      <a class="nav-link" href="reviews.html"><span>★</span><b>Reviews</b></a>
-      <a class="nav-link" href="notifications.html"><span>♧</span><b>Alerts</b></a>
-      <a class="nav-link" href="backup.html"><span>▣</span><b>Backup</b></a>
-      <a class="nav-link" href="settings.html"><span>⚙</span><b>Settings</b></a>
+      <a class="nav-link active" href="./home.html"><span>⌂</span><b>Home</b></a>
+      <a class="nav-link" href="./stories.html"><span>▤</span><b>Stories</b></a>
+      <a class="nav-link" href="./episodes.html"><span>▥</span><b>Episodes</b></a>
+      <a class="nav-link" href="./ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
+      <a class="nav-link" href="./planner.html"><span>◷</span><b>Planner</b></a>
+      <a class="nav-link" href="./hype.html"><span>↗</span><b>Hype</b></a>
+      <a class="nav-link" href="./media.html"><span>▣</span><b>Media Library</b></a>
+      <a class="nav-link" href="./docs.html"><span>📄</span><b>Document Reader</b></a>
+      <a class="nav-link" href="./channels.html"><span>◎</span><b>Channels</b></a>
+      <a class="nav-link" href="./complaints.html"><span>⚑</span><b>Complaints</b></a>
+      <a class="nav-link" href="./reviews.html"><span>★</span><b>Reviews</b></a>
+      <a class="nav-link" href="./notifications.html"><span>♧</span><b>Alerts</b></a>
+      <a class="nav-link" href="./backup.html"><span>▣</span><b>Backup</b></a>
+      <a class="nav-link" href="./settings.html"><span>⚙</span><b>Settings</b></a>
     </nav>
 
     <div class="sidebar-bottom">
-      <a class="nav-link" href="index.html"><span>↗</span><b>Welcome screen</b></a>
+      <a class="nav-link" href="./index.html"><span>↗</span><b>Welcome screen</b></a>
       <p class="small muted">Keep creating. Keep your stories safe.</p>
     </div>
   </aside>
 
-  <!-- MAIN CONTENT -->
   <div class="main-column">
 
     <header class="topbar">
@@ -624,14 +615,13 @@
 
         <div class="account-identity">
           <span class="account-username" id="accountUsername">Account</span>
-          <a class="avatar-link" id="accountAvatar" href="settings.html" aria-label="Account settings">CS</a>
+          <a class="avatar-link" id="accountAvatar" href="./settings.html" aria-label="Account settings">CS</a>
         </div>
       </div>
     </header>
 
     <main class="page-content page-enter">
 
-      <!-- WELCOME -->
       <section class="home-welcome tilt-card">
         <div class="home-welcome-content">
           <div class="home-status-line">
@@ -646,7 +636,7 @@
             Everything you need to manage your WhatsApp channels in one place.
           </p>
 
-          <a class="button primary" href="stories.html">
+          <a class="button primary" href="./stories.html">
             Open story library <span>→</span>
           </a>
         </div>
@@ -657,7 +647,6 @@
         </div>
       </section>
 
-      <!-- STATISTICS -->
       <section class="home-stats">
 
         <article class="home-stat tilt-card">
@@ -689,7 +678,6 @@
 
       </section>
 
-      <!-- UPCOMING TASKS -->
       <section class="home-section">
         <div class="home-section-heading">
           <div>
@@ -697,7 +685,7 @@
             <h2>Upcoming tasks</h2>
           </div>
 
-          <a class="text-link" href="planner.html">View planner →</a>
+          <a class="text-link" href="./planner.html">View planner →</a>
         </div>
 
         <div id="homeTasks" class="stack-list">
@@ -707,7 +695,6 @@
         </div>
       </section>
 
-      <!-- QUICK ACTIONS -->
       <section class="home-section">
         <div class="home-section-heading">
           <div>
@@ -718,42 +705,42 @@
 
         <div class="home-quick-grid">
 
-          <a class="home-quick-card" href="docs.html">
+          <a class="home-quick-card" href="./docs.html">
             <span class="home-quick-arrow">↗</span>
             <span class="home-quick-icon">📄</span>
             <b>Read a document</b>
             <small>PDF, Office & text</small>
           </a>
 
-          <a class="home-quick-card" href="stories.html">
+          <a class="home-quick-card" href="./stories.html">
             <span class="home-quick-arrow">↗</span>
             <span class="home-quick-icon">📚</span>
             <b>Import a story</b>
             <small>Build your library</small>
           </a>
 
-          <a class="home-quick-card" href="planner.html">
+          <a class="home-quick-card" href="./planner.html">
             <span class="home-quick-arrow">↗</span>
             <span class="home-quick-icon">🗓️</span>
             <b>Plan a post</b>
             <small>Set a reminder</small>
           </a>
 
-          <a class="home-quick-card" href="hype.html">
+          <a class="home-quick-card" href="./hype.html">
             <span class="home-quick-arrow">↗</span>
             <span class="home-quick-icon">📣</span>
             <b>Prepare a hype</b>
             <small>Cross-channel promo</small>
           </a>
 
-          <a class="home-quick-card" href="channels.html">
+          <a class="home-quick-card" href="./channels.html">
             <span class="home-quick-arrow">↗</span>
             <span class="home-quick-icon">💬</span>
             <b>My channels</b>
             <small>Save channel links</small>
           </a>
 
-          <a class="home-quick-card" href="media.html">
+          <a class="home-quick-card" href="./media.html">
             <span class="home-quick-arrow">↗</span>
             <span class="home-quick-icon">🎬</span>
             <b>Media library</b>
@@ -763,7 +750,6 @@
         </div>
       </section>
 
-      <!-- CAPTION SPARK -->
       <section class="home-section home-creator creator-lab">
         <div class="home-section-heading">
           <div>
@@ -824,7 +810,6 @@
 
 <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-<!-- ACCOUNT SESSION AND APPLICATION LOADER -->
 <script>
 (async function () {
   'use strict';
@@ -841,7 +826,7 @@
   }
 
   function redirectToLogin() {
-    window.location.replace('login.html');
+    window.location.replace('./login.html');
   }
 
   function loadLocalScript(src) {
@@ -951,13 +936,13 @@
 
   async function loadApplication() {
     const applicationScripts = [
-      'js/themes.js',
-      'js/transitions.js',
-      'js/effects.js',
-      'js/notifications.js',
-      'js/app.js',
-      'js/creator-lab.js',
-      'js/whatsapp-shell.js'
+      './themes.js',
+      './transitions.js',
+      './effects.js',
+      './notifications.js',
+      './app.js',
+      './creator-lab.js',
+      './whatsapp-shell.js'
     ];
 
     for (const src of applicationScripts) {
@@ -969,12 +954,11 @@
 
   try {
     // Load local storage first.
-    await loadLocalScript('js/storage.js');
+    await loadLocalScript('./storage.js');
 
     /*
-      IMPORTANT:
       Check saved access BEFORE attempting any cloud request.
-      A previously authenticated user can open the local app
+      Previously authenticated users can open the local app
       even when Supabase and the internet are unavailable.
     */
     if (hasOfflineAccess()) {
@@ -1006,7 +990,7 @@
 
     // Load the cloud system only when online.
     if (!window.ChannelStudioCloud) {
-      await loadLocalScript('js/supabase-cloud.js');
+      await loadLocalScript('./supabase-cloud.js');
     }
 
     const cloud = window.ChannelStudioCloud;
