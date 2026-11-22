@@ -1,18 +1,17 @@
 
 /* =====================================================
-   STORY STUDIO — SERVICE WORKER
-   Version: 31
+   STORIES EDITOR — SERVICE WORKER
+   Version: 32
 
    Features:
    - Offline page support
    - Automatic application updates
-   - Cache migration
+   - Previous cache migration
    - Network-first page loading
    - Network-first JavaScript and CSS
    - Offline fallback
    - Notification click navigation
    - Safe cache cleanup
-   - Reliable backup exporter caching
 ===================================================== */
 
 'use strict';
@@ -21,10 +20,15 @@
    CACHE CONFIGURATION
 ===================================================== */
 
-const CACHE_VERSION = 'channel-studio-shell-v31';
+const CACHE_VERSION = 'channel-studio-shell-v32';
 const CACHE_PREFIX = 'channel-studio-shell-';
 
 const FETCH_TIMEOUT = 8000;
+
+/* =====================================================
+   APPLICATION PAGES
+   All files are stored in the repository root.
+===================================================== */
 
 const PAGES = [
   './',
@@ -48,51 +52,64 @@ const PAGES = [
   'accounts.html'
 ];
 
+/* =====================================================
+   CSS FILES
+===================================================== */
+
 const STYLES = [
-  'css/styles.css',
-  'css/animations.css',
-  'css/themes.css',
-  'css/whatsapp-shell.css',
-  'css/ready-made.css'
+  'styles.css',
+  'animations.css',
+  'themes.css',
+  'whatsapp-shell.css',
+  'ready-made.css'
 ];
 
+/* =====================================================
+   JAVASCRIPT FILES
+   Only existing repository files are included.
+===================================================== */
+
 const SCRIPTS = [
-  'js/app-shell-behavior.js',
-  'js/storage.js',
-  'js/themes.js',
-  'js/transitions.js',
-  'js/effects.js',
-  'js/notifications.js',
-  'js/native-notifications.js',
-  'js/feedback.js',
-  'js/app.js',
-  'js/backup-reliability.js',
-  'js/native-backup.js',
-  'js/story-engine.js',
-  'js/story-split-post.js',
-  'js/documents.js',
-  'js/creator-lab.js',
-  'js/media.js',
-  'js/media-attach.js',
-  'js/android-import.js',
-  'js/planner-media.js',
-  'js/planner-story-slots.js',
-  'js/planner-publish.js',
-  'js/planner-progress.js',
-  'js/planner-stage3.js',
-  'js/planner-stage4.js',
-  'js/ready-made.js',
-  'js/supabase-cloud.js',
-  'js/auth.js',
-  'js/whatsapp-shell.js',
-  'js/wallpaper.js',
-  'js/story-runway-alerts.js'
+  'app-shell-behavior.js',
+  'storage.js',
+  'themes.js',
+  'transitions.js',
+  'effects.js',
+  'notifications.js',
+  'native-notifications.js',
+  'feedback.js',
+  'app.js',
+  'backup.js',
+  'backup-reliability.js',
+  'android-import.js',
+  'story-engine.js',
+  'story-split-post.js',
+  'documents.js',
+  'creator-lab.js',
+  'media.js',
+  'media-attach.js',
+  'planner-media.js',
+  'planner-story-slots.js',
+  'planner-publish.js',
+  'planner-progress.js',
+  'planner-stage3.js',
+  'planner-stage4.js',
+  'ready-made.js',
+  'supabase-cloud.js',
+  'auth.js',
+  'whatsapp-shell.js',
+  'wallpaper.js',
+  'story-runway-alerts.js'
 ];
+
+/* =====================================================
+   OTHER APPLICATION FILES
+===================================================== */
 
 const OTHER_FILES = [
   'manifest.webmanifest',
-  'assets/icons/icon-192.png',
-  'assets/icons/icon-512.png'
+  'icon-192.png',
+  'icon-512.png'
 ];
 
 const CORE_FILES = [
@@ -103,14 +120,17 @@ const CORE_FILES = [
 ];
 
 /* =====================================================
-   HELPERS
+   HELPER FUNCTIONS
 ===================================================== */
 
 function makeURL(path) {
-  return new URL(path, self.registration.scope).href;
+  return new URL(
+    path,
+    self.registration.scope
+  ).href;
 }
 
-async function fetchWithTimeout(url) {
+async function fetchWithTimeout(resource) {
   const controller = new AbortController();
 
   const timer = setTimeout(() => {
@@ -118,7 +138,7 @@ async function fetchWithTimeout(url) {
   }, FETCH_TIMEOUT);
 
   try {
-    return await fetch(url, {
+    return await fetch(resource, {
       cache: 'no-store',
       signal: controller.signal
     });
@@ -128,14 +148,19 @@ async function fetchWithTimeout(url) {
 }
 
 async function saveResponse(cache, request, response) {
-  if (!response || !response.ok) return;
+  if (!response || !response.ok) {
+    return;
+  }
 
   try {
-    await cache.put(request, response.clone());
+    await cache.put(
+      request,
+      response.clone()
+    );
   } catch (error) {
     console.warn(
-      '[Story Studio] Could not cache resource:',
-      request.url,
+      '[Stories Editor] Could not cache:',
+      request.url || request,
       error
     );
   }
@@ -163,14 +188,16 @@ self.addEventListener('install', event => {
     const cache = await caches.open(CACHE_VERSION);
 
     console.log(
-      '[Story Studio] Installing version 31...'
+      '[Stories Editor] Installing version 32...'
     );
 
     /* ---------------------------------------------
        MIGRATE PREVIOUS CACHE CONTENT
     --------------------------------------------- */
 
-    const oldCaches = (await caches.keys()).filter(name =>
+    const oldCaches = (
+      await caches.keys()
+    ).filter(name =>
       name.startsWith(CACHE_PREFIX) &&
       name !== CACHE_VERSION
     );
@@ -182,25 +209,29 @@ self.addEventListener('install', event => {
 
         for (const request of requests) {
           try {
-            if (await cache.match(request)) continue;
+            if (await cache.match(request)) {
+              continue;
+            }
 
             const response = await oldCache.match(request);
 
             if (response) {
-              await cache.put(request, response);
+              await cache.put(
+                request,
+                response
+              );
             }
-
           } catch (error) {
             console.warn(
-              '[Story Studio] Migration item skipped:',
-              request.url
+              '[Stories Editor] Cache migration item skipped:',
+              request.url,
+              error
             );
           }
         }
-
       } catch (error) {
         console.warn(
-          '[Story Studio] Previous cache migration failed:',
+          '[Stories Editor] Previous cache migration failed:',
           oldName,
           error
         );
@@ -219,17 +250,20 @@ self.addEventListener('install', event => {
           const response = await fetchWithTimeout(url);
 
           if (response && response.ok) {
-            await saveResponse(cache, url, response);
+            await saveResponse(
+              cache,
+              url,
+              response
+            );
           } else {
             console.warn(
-              '[Story Studio] File unavailable:',
+              '[Stories Editor] File unavailable:',
               path
             );
           }
-
         } catch (error) {
           console.warn(
-            '[Story Studio] Using previous cached copy:',
+            '[Stories Editor] Could not download:',
             path
           );
         }
@@ -241,7 +275,7 @@ self.addEventListener('install', event => {
     ).length;
 
     console.log(
-      `[Story Studio] Core cache processed: ${successful}/${CORE_FILES.length}`
+      `[Stories Editor] Core cache processed: ${successful}/${CORE_FILES.length}`
     );
 
     await self.skipWaiting();
@@ -257,6 +291,8 @@ self.addEventListener('activate', event => {
   event.waitUntil((async () => {
     const cacheNames = await caches.keys();
 
+    /* Remove older Stories Editor caches. */
+
     await Promise.all(
       cacheNames
         .filter(name =>
@@ -269,8 +305,10 @@ self.addEventListener('activate', event => {
     await self.clients.claim();
 
     console.log(
-      '[Story Studio] Version 31 activated.'
+      '[Stories Editor] Version 32 activated.'
     );
+
+    /* Notify open application windows. */
 
     const clients = await self.clients.matchAll({
       type: 'window',
@@ -299,7 +337,10 @@ self.addEventListener('message', event => {
     return;
   }
 
-  if (message && message.type === 'GET_VERSION') {
+  if (
+    message &&
+    message.type === 'GET_VERSION'
+  ) {
     event.source?.postMessage({
       type: 'SERVICE_WORKER_VERSION',
       version: CACHE_VERSION
@@ -314,24 +355,40 @@ self.addEventListener('message', event => {
 async function offlineResponse(request) {
   const cache = await caches.open(CACHE_VERSION);
 
+  /* Try the exact requested page first. */
+
   if (request.mode === 'navigate') {
     const cachedPage = await cache.match(
       request,
       { ignoreSearch: true }
     );
 
-    if (cachedPage) return cachedPage;
+    if (cachedPage) {
+      return cachedPage;
+    }
 
-    const home = await cache.match(makeURL('home.html'));
+    /* Try the home page. */
 
-    if (home) return home;
+    const home = await cache.match(
+      makeURL('home.html')
+    );
 
-    const welcome = await cache.match(makeURL('index.html'));
+    if (home) {
+      return home;
+    }
 
-    if (welcome) return welcome;
+    /* Try the welcome page. */
+
+    const welcome = await cache.match(
+      makeURL('index.html')
+    );
+
+    if (welcome) {
+      return welcome;
+    }
 
     return new Response(
-      '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title></head><body><h1>Story Studio is offline</h1><p>This page has not been saved for offline use yet. Reconnect to the internet and try again.</p></body></html>',
+      '<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Offline</title></head><body><h1>Stories Editor is offline</h1><p>This page has not been saved for offline use yet. Reconnect to the internet and try again.</p></body></html>',
       {
         status: 503,
         headers: {
@@ -341,12 +398,16 @@ async function offlineResponse(request) {
     );
   }
 
+  /* Try the cached resource. */
+
   const cachedResource = await cache.match(
     request,
     { ignoreSearch: true }
   );
 
-  if (cachedResource) return cachedResource;
+  if (cachedResource) {
+    return cachedResource;
+  }
 
   return new Response(
     'This resource is not available offline.',
@@ -366,13 +427,25 @@ async function offlineResponse(request) {
 self.addEventListener('fetch', event => {
   const request = event.request;
 
-  if (request.method !== 'GET') return;
+  /* Only handle GET requests. */
+
+  if (request.method !== 'GET') {
+    return;
+  }
 
   const url = new URL(request.url);
 
-  if (url.origin !== self.location.origin) return;
+  /* Do not intercept external websites or CDNs. */
 
-  if (request.headers.has('range')) return;
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  /* Do not interfere with partial media requests. */
+
+  if (request.headers.has('range')) {
+    return;
+  }
 
   event.respondWith((async () => {
     const cache = await caches.open(CACHE_VERSION);
@@ -386,13 +459,17 @@ self.addEventListener('fetch', event => {
         const response = await fetchWithTimeout(request);
 
         if (response && response.ok) {
-          await saveResponse(cache, request, response);
+          await saveResponse(
+            cache,
+            request,
+            response
+          );
+
           return response;
         }
-
       } catch (error) {
         console.warn(
-          '[Story Studio] Page loaded from offline cache:',
+          '[Stories Editor] Loading page from offline cache:',
           url.pathname
         );
       }
@@ -402,8 +479,6 @@ self.addEventListener('fetch', event => {
 
     /* ---------------------------------------------
        JAVASCRIPT AND CSS — NETWORK FIRST
-       Prevents old cached code from being served
-       when a newer version is available.
     --------------------------------------------- */
 
     if (isCodeAsset(request, url)) {
@@ -411,13 +486,17 @@ self.addEventListener('fetch', event => {
         const response = await fetchWithTimeout(request);
 
         if (response && response.ok) {
-          await saveResponse(cache, request, response);
+          await saveResponse(
+            cache,
+            request,
+            response
+          );
+
           return response;
         }
-
       } catch (error) {
         console.warn(
-          '[Story Studio] Code asset using offline cache:',
+          '[Stories Editor] Using cached code:',
           url.pathname
         );
       }
@@ -427,7 +506,6 @@ self.addEventListener('fetch', event => {
 
     /* ---------------------------------------------
        OTHER FILES — CACHE FIRST
-       Refresh cache in the background.
     --------------------------------------------- */
 
     const cached = await cache.match(
@@ -436,11 +514,17 @@ self.addEventListener('fetch', event => {
     );
 
     if (cached) {
+      /* Refresh the cached copy in the background. */
+
       event.waitUntil(
         fetchWithTimeout(request)
-          .then(response => {
-            return saveResponse(cache, request, response);
-          })
+          .then(response =>
+            saveResponse(
+              cache,
+              request,
+              response
+            )
+          )
           .catch(() => {
             // Keep the existing offline copy.
           })
@@ -457,7 +541,11 @@ self.addEventListener('fetch', event => {
       const response = await fetchWithTimeout(request);
 
       if (response && response.ok) {
-        await saveResponse(cache, request, response);
+        await saveResponse(
+          cache,
+          request,
+          response
+        );
       }
 
       return response;
@@ -488,9 +576,13 @@ self.addEventListener('notificationclick', event => {
         self.registration.scope
       );
 
+      /* Keep navigation inside this application. */
+
       if (
         targetURL.origin !== self.location.origin ||
-        !targetURL.href.startsWith(self.registration.scope)
+        !targetURL.href.startsWith(
+          self.registration.scope
+        )
       ) {
         targetURL = new URL(
           'planner.html',
@@ -512,13 +604,17 @@ self.addEventListener('notificationclick', event => {
 
     for (const client of windows) {
       if (
-        client.url.startsWith(self.registration.scope) &&
+        client.url.startsWith(
+          self.registration.scope
+        ) &&
         'focus' in client
       ) {
         await client.focus();
 
         if ('navigate' in client) {
-          await client.navigate(targetURL.href);
+          await client.navigate(
+            targetURL.href
+          );
         }
 
         return;
@@ -526,7 +622,9 @@ self.addEventListener('notificationclick', event => {
     }
 
     if (self.clients.openWindow) {
-      await self.clients.openWindow(targetURL.href);
+      await self.clients.openWindow(
+        targetURL.href
+      );
     }
 
   })());
