@@ -4,15 +4,15 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<script src="js/app-shell-behavior.js"></script>
+<script src="./app-shell-behavior.js"></script>
 <meta name="theme-color" content="#101827">
 <meta name="description" content="Make your studio feel like yours.">
 <title>Settings — Channel Studio</title>
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="css/styles.css">
-<link rel="stylesheet" href="css/animations.css">
-<link rel="stylesheet" href="css/themes.css">
-<link rel="stylesheet" href="css/whatsapp-shell.css">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./animations.css">
+<link rel="stylesheet" href="./themes.css">
+<link rel="stylesheet" href="./whatsapp-shell.css">
 
 <style>
 .wallpaper-preview {
@@ -75,7 +75,6 @@
 </head>
 
 <body data-page="settings">
-
 <div class="app-layout">
 
 <aside class="sidebar">
@@ -108,7 +107,6 @@
 </aside>
 
 <div class="main-column">
-
 <header class="topbar">
 <button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
 <div>
@@ -131,7 +129,6 @@
 
 <section class="panel">
 <h2>Appearance</h2>
-
 <div class="form-grid">
 
 <label>Colour theme
@@ -174,11 +171,9 @@
 <button id="saveSettings" class="button primary">Save appearance</button>
 <p id="settingsStatus" class="small muted" role="status"></p>
 </div>
-
 </div>
 </section>
 
-<!-- CUSTOM WALLPAPER -->
 <section class="panel" id="wallpaperPanel">
 <h2>🖼️ Custom wallpaper</h2>
 <p class="muted">Give your studio your own look. Choose an image from your phone gallery.</p>
@@ -188,40 +183,21 @@
 </div>
 
 <div class="wallpaper-actions">
-<label for="wallpaperFile" class="button primary wallpaper-upload-label">
-＋ Choose from gallery
-</label>
-<input
-  id="wallpaperFile"
-  class="wallpaper-file-input"
-  type="file"
-  accept="image/*">
-<button id="removeWallpaper" class="button ghost" type="button">
-Remove wallpaper
-</button>
+<label for="wallpaperFile" class="button primary wallpaper-upload-label">＋ Choose from gallery</label>
+<input id="wallpaperFile" class="wallpaper-file-input" type="file" accept="image/*">
+<button id="removeWallpaper" class="button ghost" type="button">Remove wallpaper</button>
 </div>
 
 <div class="form-grid" style="margin-top:18px">
 <label class="full">
 Wallpaper brightness
 <output id="wallpaperBrightnessValue">85%</output>
-<input
-  id="wallpaperBrightness"
-  class="wallpaper-range"
-  type="range"
-  min="20"
-  max="100"
-  value="85">
+<input id="wallpaperBrightness" class="wallpaper-range" type="range" min="20" max="100" value="85">
 </label>
 </div>
 
-<p id="wallpaperStatus" class="small muted" role="status" aria-live="polite">
-No custom wallpaper selected.
-</p>
-
-<p class="wallpaper-help">
-Your wallpaper is stored on this device. For best performance, use an image under 8 MB.
-</p>
+<p id="wallpaperStatus" class="small muted" role="status" aria-live="polite">No custom wallpaper selected.</p>
+<p class="wallpaper-help">Your wallpaper is stored on this device. For best performance, use an image under 8 MB.</p>
 </section>
 
 <section class="panel">
@@ -269,20 +245,19 @@ Your wallpaper is stored on this device. For best performance, use an image unde
 Made for your stories <span>✦</span>
 <span class="muted">Local-first • Your content stays yours</span>
 </footer>
-
 </div>
 </div>
 
 <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-<script src="js/storage.js"></script>
-<script src="js/themes.js"></script>
-<script src="js/wallpaper.js"></script>
-<script src="js/transitions.js"></script>
-<script src="js/effects.js"></script>
-<script src="js/notifications.js"></script>
-<script src="js/app.js"></script>
-<script src="js/whatsapp-shell.js"></script>
+<script src="./storage.js"></script>
+<script src="./themes.js"></script>
+<script src="./wallpaper.js"></script>
+<script src="./transitions.js"></script>
+<script src="./effects.js"></script>
+<script src="./notifications.js"></script>
+<script src="./app.js"></script>
+<script src="./whatsapp-shell.js"></script>
 
 </body>
 </html>
