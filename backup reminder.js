@@ -89,7 +89,7 @@
           '. It is at least 24 hours old. Consider creating a fresh backup.';
       } else {
         panel.textContent =
-          '✅ Your latest cloud backup was saved on ' +
+          '✅ Your 🎉latest cloud backup was saved on ' +
           dateText + '. Your backup is up to date.';
       }
 
