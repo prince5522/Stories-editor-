@@ -1,8 +1,9 @@
+
 {
   "id": "./",
-  "name": "Channel Studio",
-  "short_name": "Channel Studio",
-  "description": "Organise stories, manage episodes, prepare channel posts and stay on schedule with Channel Studio.",
+  "name": "Stories Editor",
+  "short_name": "Stories Editor",
+  "description": "Create and organise stories, manage episodes, prepare WhatsApp Channel posts and stay on schedule with Stories Editor.",
   "lang": "en",
   "start_url": "./index.html",
   "scope": "./",
@@ -21,25 +22,25 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "assets/icons/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/icon-192.png",
+      "src": "./icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "assets/icons/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
     },
     {
-      "src": "assets/icons/icon-512.png",
+      "src": "./icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
