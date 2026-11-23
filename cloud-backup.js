@@ -1,11 +1,12 @@
 
 /* =====================================================
    STORIES EDITOR — SUPABASE CLOUD BACKUP
-   Version 2.0
-   - Full local-record snapshots
-   - Safe array merging
-   - Restores missing records by ID
-   - Preserves existing local data
+   Version 3.0
+   - One current backup per account
+   - Updates existing cloud backup instead of creating history
+   - Keeps safe restore behaviour
+   - Preserves local records
+   - Media syncing will be connected in a later stage
 ===================================================== */
 
 (function () {
@@ -41,13 +42,9 @@
   function isEmpty(value) {
     if (value === null || value === undefined) return true;
 
-    if (typeof value === 'string') {
-      return !value.trim();
-    }
+    if (typeof value === 'string') return !value.trim();
 
-    if (Array.isArray(value)) {
-      return value.length === 0;
-    }
+    if (Array.isArray(value)) return value.length === 0;
 
     if (isPlainObject(value)) {
       return Object.values(value).every(isEmpty);
@@ -68,16 +65,10 @@
     }
   }
 
-  /*
-   * Only use stable record identifiers.
-   * Do not match records by title or text alone.
-   */
   function getIdentity(item) {
     if (!isPlainObject(item)) return null;
 
-    const fields = ['id', 'uuid', '_id', 'recordId'];
-
-    for (const field of fields) {
+    for (const field of ['id', 'uuid', '_id', 'recordId']) {
       const value = item[field];
 
       if (
@@ -92,17 +83,6 @@
     return null;
   }
 
-  /*
-   * Merge arrays without replacing existing items.
-   *
-   * Matching IDs:
-   *   Merge missing fields into the existing item.
-   *
-   * Items without IDs:
-   *   Add only when an identical item is not present.
-   *
-   * Existing local order is preserved.
-   */
   function mergeArrays(current, incoming) {
     if (!Array.isArray(current)) {
       return isEmpty(current) ? clone(incoming) : clone(current);
@@ -130,11 +110,7 @@
         continue;
       }
 
-      const alreadyExists = result.some(
-        item => sameValue(item, incomingItem)
-      );
-
-      if (!alreadyExists) {
+      if (!result.some(item => sameValue(item, incomingItem))) {
         result.push(clone(incomingItem));
       }
     }
@@ -142,14 +118,8 @@
     return result;
   }
 
-  /*
-   * Safe recursive merge.
-   * Existing non-empty local values take priority.
-   */
   function mergeMissing(current, incoming) {
-    if (isEmpty(current)) {
-      return clone(incoming);
-    }
+    if (isEmpty(current)) return clone(incoming);
 
     if (Array.isArray(current) && Array.isArray(incoming)) {
       return mergeArrays(current, incoming);
@@ -165,18 +135,13 @@
         ) {
           result[key] = clone(incoming[key]);
         } else {
-          result[key] = mergeMissing(
-            result[key],
-            incoming[key]
-          );
+          result[key] = mergeMissing(result[key], incoming[key]);
         }
       }
 
       return result;
     }
 
-    // Never replace an existing non-empty value
-    // with a different value from an older backup.
     return clone(current);
   }
 
@@ -188,9 +153,7 @@
     const ready = await cloud.ready;
 
     if (ready && ready.online === false) {
-      throw new Error(
-        ready.error || 'Supabase is unavailable.'
-      );
+      throw new Error(ready.error || 'Supabase is unavailable.');
     }
 
     if (cloud.waitForCloudSync) {
@@ -220,11 +183,6 @@
     return { user, client };
   }
 
-  /*
-   * Collect every record managed by StudioStore.
-   * Binary media stored separately in IndexedDB
-   * is not included in this snapshot.
-   */
   async function createSnapshot() {
     await store.ready;
     await store.flush();
@@ -234,21 +192,28 @@
       : store.all();
 
     if (!records || !Object.keys(records).length) {
-      throw new Error(
-        'There is no local app data to back up.'
-      );
+      throw new Error('There is no local app data to back up.');
     }
 
     return {
       application: 'Story Studio',
       format: 'story-studio-backup',
-      version: 2,
-      cloudBackupVersion: 2,
+      version: 3,
+      cloudBackupVersion: 3,
       exportedAt: new Date().toISOString(),
       records: records
     };
   }
 
+  /*
+   * SINGLE BACKUP PER ACCOUNT
+   *
+   * The unique index on app_backups.user_id was
+   * created in Stage 1.
+   *
+   * upsert updates that account's existing row.
+   * It does not create a backup history.
+   */
   async function uploadBackup() {
     const { user, client } = await getAccount();
     const snapshot = await createSnapshot();
@@ -258,18 +223,20 @@
 
     if (bytes > MAX_BACKUP_BYTES) {
       throw new Error(
-        'This backup is larger than 5 MB. ' +
-        'Export a local JSON backup and keep it safe.'
+        'Your records backup is larger than 5 MB. ' +
+        'Media files will be handled separately in the next stage.'
       );
     }
 
     const { data, error } = await client
       .from(TABLE)
-      .insert({
+      .upsert({
         user_id: user.id,
         backup_data: snapshot,
-        backup_version: 2,
+        backup_version: 3,
         record_count: Object.keys(snapshot.records).length
+      }, {
+        onConflict: 'user_id'
       })
       .select('id, created_at, record_count')
       .single();
@@ -277,8 +244,9 @@
     if (error) throw error;
 
     show(
-      'Cloud backup saved successfully. ' +
-      data.record_count + ' data sections backed up.'
+      'Latest cloud backup updated successfully. ' +
+      data.record_count + ' data sections saved. ' +
+      'Previous backup replaced.'
     );
 
     await listBackups();
@@ -286,6 +254,9 @@
     return data;
   }
 
+  /*
+   * There should now be only one row per account.
+   */
   async function listBackups() {
     const { user, client } = await getAccount();
 
@@ -293,8 +264,7 @@
       .from(TABLE)
       .select('id, created_at, record_count, backup_version')
       .eq('user_id', user.id)
-      .order('created_at', { ascending: false })
-      .limit(30);
+      .limit(1);
 
     if (error) throw error;
 
@@ -306,39 +276,44 @@
 
     if (!data || !data.length) {
       const empty = document.createElement('p');
-      empty.textContent = 'No cloud backups yet.';
+      empty.textContent = 'No cloud backup saved yet.';
       list.appendChild(empty);
       return [];
     }
 
-    data.forEach(item => {
-      const row = document.createElement('div');
-      row.className = 'cloud-backup-item';
+    const item = data[0];
 
-      const info = document.createElement('div');
+    const row = document.createElement('div');
+    row.className = 'cloud-backup-item';
 
-      const date = document.createElement('strong');
-      date.textContent = new Date(
-        item.created_at
-      ).toLocaleString();
+    const info = document.createElement('div');
 
-      const count = document.createElement('p');
-      count.textContent =
-        item.record_count + ' data sections';
+    const title = document.createElement('strong');
+    title.textContent = 'Current cloud backup';
 
-      info.append(date, count);
+    const date = document.createElement('p');
+    date.textContent = item.created_at
+      ? 'Record created: ' + new Date(
+          item.created_at
+        ).toLocaleString()
+      : 'Latest saved backup';
 
-      const restore = document.createElement('button');
-      restore.type = 'button';
-      restore.textContent = 'Restore';
+    const count = document.createElement('p');
+    count.textContent =
+      item.record_count + ' data sections';
 
-      restore.addEventListener('click', () => {
-        restoreBackup(item.id);
-      });
+    info.append(title, date, count);
 
-      row.append(info, restore);
-      list.appendChild(row);
+    const restore = document.createElement('button');
+    restore.type = 'button';
+    restore.textContent = 'Restore';
+
+    restore.addEventListener('click', () => {
+      restoreBackup(item.id);
     });
+
+    row.append(info, restore);
+    list.appendChild(row);
 
     return data;
   }
@@ -347,11 +322,10 @@
     if (!id) return;
 
     const confirmed = window.confirm(
-      'Restore this cloud backup into this device?\n\n' +
+      'Restore the current cloud backup into this device?\n\n' +
       'Missing records and array items will be added. ' +
-      'Existing local records and non-empty values ' +
-      'will be preserved.\n\n' +
-      'It is recommended to export a local backup first.'
+      'Existing non-empty local values will be preserved.\n\n' +
+      'Export a local backup before continuing.'
     );
 
     if (!confirmed) return;
@@ -376,15 +350,11 @@
         backup.format !== 'story-studio-backup' ||
         !isPlainObject(backup.records)
       ) {
-        throw new Error(
-          'The selected cloud backup is invalid.'
-        );
+        throw new Error('The selected cloud backup is invalid.');
       }
 
-      if (backup.version !== 2) {
-        throw new Error(
-          'This cloud backup version is not supported.'
-        );
+      if (![2, 3].includes(Number(backup.version))) {
+        throw new Error('This cloud backup version is not supported.');
       }
 
       const current = await store.allAsync();
@@ -406,32 +376,29 @@
         const incoming = backup.records[key];
 
         if (
-          !Object.prototype.hasOwnProperty.call(
-            current,
-            key
-          ) ||
+          !Object.prototype.hasOwnProperty.call(current, key) ||
           isEmpty(current[key])
         ) {
-          store.set(key, clone(incoming));
+          const saved = store.set(key, clone(incoming));
+
+          if (!saved) {
+            throw new Error('Could not restore section: ' + key);
+          }
+
           restored++;
           continue;
         }
 
-        const merged = mergeMissing(
-          current[key],
-          incoming
-        );
+        const merged = mergeMissing(current[key], incoming);
 
         if (!sameValue(merged, current[key])) {
           const saved = store.set(key, merged);
 
-          if (saved) {
-            restored++;
-          } else {
-            throw new Error(
-              'Could not save restored section: ' + key
-            );
+          if (!saved) {
+            throw new Error('Could not save restored section: ' + key);
           }
+
+          restored++;
         } else {
           preserved++;
         }
@@ -442,17 +409,13 @@
       show(
         'Cloud restore finished. ' +
         restored + ' sections restored or merged; ' +
-        preserved + ' sections already preserved. ' +
+        preserved + ' sections preserved. ' +
         'Reload the app to refresh its pages.'
       );
 
     } catch (error) {
       console.error('Cloud restore failed:', error);
-
-      show(
-        error.message || 'Cloud restore failed.',
-        true
-      );
+      show(error.message || 'Cloud restore failed.', true);
     }
   }
 
@@ -468,15 +431,11 @@
         await uploadBackup();
       } else if (action === 'list') {
         await listBackups();
-        show('Cloud backup list refreshed.');
+        show('Current cloud backup checked.');
       }
     } catch (error) {
       console.error('Cloud backup error:', error);
-
-      show(
-        error.message || 'Cloud backup operation failed.',
-        true
-      );
+      show(error.message || 'Cloud backup operation failed.', true);
     } finally {
       if (upload) upload.disabled = false;
       if (refresh) refresh.disabled = false;
@@ -488,15 +447,11 @@
     const refresh = $('cloudBackupRefresh');
 
     if (upload) {
-      upload.addEventListener('click', () => {
-        run('upload');
-      });
+      upload.addEventListener('click', () => run('upload'));
     }
 
     if (refresh) {
-      refresh.addEventListener('click', () => {
-        run('list');
-      });
+      refresh.addEventListener('click', () => run('list'));
     }
 
     if (upload || refresh) {
@@ -505,12 +460,8 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener(
-      'DOMContentLoaded',
-      initialize
-    );
+    document.addEventListener('DOMContentLoaded', initialize);
   } else {
     initialize();
   }
-
 })();
