@@ -2,485 +2,394 @@
 <!doctype html>
 <html lang="en" data-theme="system">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#101827">
-  <meta name="description" content="Create, organise and read your story episodes.">
-  <title>Episode Studio — Stories Editor</title>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<meta name="description" content="Create, organise and read your story episodes.">
+<title>Episode Studio — Channel Studio</title>
 
-  <link rel="manifest" href="./manifest.webmanifest">
-  <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./animations.css">
-  <link rel="stylesheet" href="./themes.css">
-  <link rel="stylesheet" href="./whatsapp-shell.css">
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="stylesheet" href="./styles.css">
+<link rel="stylesheet" href="./animations.css">
+<link rel="stylesheet" href="./themes.css">
+<link rel="stylesheet" href="./whatsapp-shell.css">
+<script src="./app-shell-behavior.js"></script>
 
-  <script src="./app-shell-behavior.js"></script>
+<style>
+body[data-page="episodes"]{
+ --ep-blue:#55baff;
+ --ep-cyan:#39e5d2;
+ --ep-pink:#ff8bc8;
+ --ep-gold:#ffd078;
+ background:
+ radial-gradient(ellipse at 5% 4%,rgba(58,137,255,.16),transparent 34%),
+ radial-gradient(ellipse at 95% 12%,rgba(207,91,221,.13),transparent 32%),
+ radial-gradient(ellipse at 50% 100%,rgba(37,211,190,.08),transparent 38%),
+ var(--bg,#101827);
+}
+body[data-page="episodes"] .main-column{min-width:0}
+body[data-page="episodes"] .page-content{
+ width:100%;max-width:1200px;margin:auto;
+ padding:26px clamp(14px,3vw,30px) 45px;
+}
 
-  <style>
-    body[data-page="episodes"] {
-      --studio-blue:#55aaff;
-      --studio-cyan:#35e0d0;
-      --studio-pink:#ff83c8;
-      --studio-gold:#ffc66e;
-      background:
-        radial-gradient(ellipse at 5% 4%,rgba(58,137,255,.19),transparent 34%),
-        radial-gradient(ellipse at 95% 12%,rgba(207,91,221,.16),transparent 32%),
-        radial-gradient(ellipse at 50% 100%,rgba(37,211,190,.10),transparent 38%),
-        var(--bg,#101827);
-    }
+/* HERO */
+.studio-hero{
+ position:relative;isolation:isolate;overflow:hidden;
+ display:grid;grid-template-columns:1.2fr .8fr;
+ align-items:center;gap:20px;min-height:290px;
+ padding:clamp(24px,4vw,44px);
+ border:1px solid rgba(255,255,255,.17);
+ border-radius:30px;color:#fff;
+ background:
+ radial-gradient(circle at 80% 20%,rgba(94,211,255,.2),transparent 34%),
+ linear-gradient(125deg,#102e55 0%,#29265e 52%,#642e68 100%);
+ box-shadow:0 25px 65px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.2);
+}
+.studio-hero:before{
+ content:"";position:absolute;z-index:-1;
+ width:350px;height:350px;right:-100px;top:-190px;
+ border:1px solid rgba(255,255,255,.22);border-radius:50%;
+ box-shadow:0 0 0 25px rgba(255,255,255,.035),
+ 0 0 0 60px rgba(255,255,255,.025),0 0 0 100px rgba(255,255,255,.018);
+}
+.studio-hero:after{
+ content:"";position:absolute;z-index:-1;
+ width:260px;height:260px;left:30%;bottom:-210px;
+ background:#35e0d0;border-radius:50%;filter:blur(80px);opacity:.2;
+}
+.studio-kicker{
+ display:inline-flex;align-items:center;gap:8px;
+ padding:8px 13px;border-radius:30px;
+ border:1px solid rgba(255,255,255,.2);
+ background:rgba(255,255,255,.1);
+ color:#d9f5ff;font-size:10px;font-weight:900;letter-spacing:1.8px;
+}
+.studio-hero h1{
+ margin:20px 0 12px;color:#fff;
+ font-size:clamp(35px,5vw,58px);line-height:1.02;letter-spacing:-2px;
+}
+.studio-hero h1 span{
+ background:linear-gradient(90deg,#6ce9e7,#c2a6ff,#ffabd9);
+ -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.studio-hero p{max-width:540px;color:rgba(255,255,255,.76);line-height:1.75;font-size:14px}
 
-    body[data-page="episodes"] .main-column {min-width:0}
-    body[data-page="episodes"] .page-content {
-      width:100%;max-width:1200px;margin:auto;
-      padding:26px clamp(14px,3vw,30px) 45px;
-    }
+/* BOOK ART */
+.studio-art{position:relative;min-height:205px;display:grid;place-items:center;perspective:800px}
+.art-ring{
+ width:190px;height:190px;border-radius:50%;display:grid;place-items:center;
+ border:1px solid rgba(255,255,255,.25);
+ background:radial-gradient(circle,rgba(255,255,255,.17),transparent 68%);
+ box-shadow:0 0 55px rgba(92,190,255,.2),inset 0 0 30px rgba(255,255,255,.1);
+ animation:ringFloat 6s ease-in-out infinite;
+}
+.art-book{
+ position:relative;width:112px;height:145px;display:grid;place-items:center;
+ border-radius:9px 19px 19px 9px;border:1px solid rgba(255,255,255,.55);
+ background:linear-gradient(145deg,#65d9e9,#5874d8 55%,#9b61c6);
+ box-shadow:12px 17px 25px rgba(0,0,0,.35),inset 5px 0 0 rgba(255,255,255,.22),inset -5px 0 0 rgba(0,0,0,.1);
+ transform:rotateY(-19deg) rotateZ(-8deg);font-size:48px;
+}
+.art-book:after{
+ content:"";position:absolute;right:-8px;top:5px;width:8px;height:132px;
+ border-radius:0 5px 5px 0;
+ background:repeating-linear-gradient(to bottom,#fff 0 3px,#d7d9ef 4px 5px);
+}
+.art-orbit-dot{position:absolute;width:13px;height:13px;border-radius:50%;background:linear-gradient(135deg,#fff,#68dff0);box-shadow:0 0 18px rgba(255,255,255,.8)}
+.art-orbit-dot.one{top:18px;right:20%}
+.art-orbit-dot.two{bottom:19px;left:13%;width:9px;height:9px}
+.art-label{
+ position:absolute;right:0;bottom:5px;padding:10px 14px;border-radius:13px;
+ border:1px solid rgba(255,255,255,.2);background:rgba(9,17,42,.72);
+ font-size:10px;font-weight:900;letter-spacing:1px;
+}
+@keyframes ringFloat{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-10px) rotate(5deg)}}
 
-    /* HERO */
-    .studio-hero {
-      position:relative;isolation:isolate;overflow:hidden;
-      display:grid;grid-template-columns:1.2fr .8fr;
-      align-items:center;gap:20px;min-height:290px;
-      padding:clamp(24px,4vw,44px);
-      border:1px solid rgba(255,255,255,.17);
-      border-radius:30px;color:#fff;
-      background:linear-gradient(125deg,#102e55 0%,#29265e 52%,#642e68 100%);
-      box-shadow:0 25px 65px rgba(0,0,0,.28),
-        inset 0 1px 0 rgba(255,255,255,.2);
-    }
-    .studio-hero:before {
-      content:"";position:absolute;z-index:-1;
-      width:350px;height:350px;right:-100px;top:-190px;
-      border:1px solid rgba(255,255,255,.22);border-radius:50%;
-      box-shadow:0 0 0 25px rgba(255,255,255,.035),
-        0 0 0 60px rgba(255,255,255,.025),
-        0 0 0 100px rgba(255,255,255,.018);
-    }
-    .studio-hero:after {
-      content:"";position:absolute;z-index:-1;
-      width:260px;height:260px;left:30%;bottom:-210px;
-      background:#35e0d0;border-radius:50%;filter:blur(80px);opacity:.2;
-    }
-    .studio-kicker {
-      display:inline-flex;align-items:center;gap:8px;
-      padding:8px 13px;border-radius:30px;
-      border:1px solid rgba(255,255,255,.2);
-      background:rgba(255,255,255,.1);
-      color:#d9f5ff;font-size:10px;font-weight:900;
-      letter-spacing:1.8px;
-    }
-    .studio-hero h1 {
-      margin:20px 0 12px;color:#fff;
-      font-size:clamp(35px,5vw,58px);
-      line-height:1.02;letter-spacing:-2px;
-    }
-    .studio-hero h1 span {
-      background:linear-gradient(90deg,#6ce9e7,#c2a6ff,#ffabd9);
-      -webkit-background-clip:text;background-clip:text;color:transparent;
-    }
-    .studio-hero p {
-      max-width:540px;color:rgba(255,255,255,.76);
-      line-height:1.75;font-size:14px;
-    }
+/* FEATURE CARDS */
+.studio-features{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px;margin:18px 0 32px}
+.studio-feature{
+ display:flex;align-items:center;gap:13px;min-width:0;padding:16px;
+ border:1px solid var(--border,rgba(255,255,255,.12));
+ border-radius:19px;background:var(--surface,rgba(255,255,255,.055));
+ box-shadow:0 9px 25px rgba(0,0,0,.07);
+ backdrop-filter:blur(16px);
+}
+.feature-icon{
+ width:43px;height:43px;flex:0 0 43px;display:grid;place-items:center;
+ border-radius:14px;background:rgba(85,170,255,.15);font-size:21px;
+}
+.studio-feature:nth-child(2) .feature-icon{background:rgba(53,224,208,.14)}
+.studio-feature:nth-child(3) .feature-icon{background:rgba(255,131,200,.14)}
+.studio-feature strong{display:block;font-size:13px}
+.studio-feature small{display:block;margin-top:4px;color:var(--muted,#aab5c6);font-size:10px;line-height:1.5}
 
-    /* BOOK ART */
-    .studio-art {
-      position:relative;min-height:205px;
-      display:grid;place-items:center;perspective:800px;
-    }
-    .art-ring {
-      width:190px;height:190px;border-radius:50%;
-      display:grid;place-items:center;
-      border:1px solid rgba(255,255,255,.25);
-      background:radial-gradient(circle,rgba(255,255,255,.17),transparent 68%);
-      box-shadow:0 0 55px rgba(92,190,255,.2),
-        inset 0 0 30px rgba(255,255,255,.1);
-      animation:ringFloat 6s ease-in-out infinite;
-    }
-    .art-book {
-      position:relative;width:112px;height:145px;
-      display:grid;place-items:center;
-      border-radius:9px 19px 19px 9px;
-      border:1px solid rgba(255,255,255,.55);
-      background:linear-gradient(145deg,#65d9e9,#5874d8 55%,#9b61c6);
-      box-shadow:12px 17px 25px rgba(0,0,0,.35),
-        inset 5px 0 0 rgba(255,255,255,.22),
-        inset -5px 0 0 rgba(0,0,0,.1);
-      transform:rotateY(-19deg) rotateZ(-8deg);
-      font-size:48px;
-    }
-    .art-book:after {
-      content:"";position:absolute;right:-8px;top:5px;
-      width:8px;height:132px;border-radius:0 5px 5px 0;
-      background:repeating-linear-gradient(to bottom,#fff 0 3px,#d7d9ef 4px 5px);
-    }
-    .art-orbit-dot {
-      position:absolute;width:13px;height:13px;border-radius:50%;
-      background:linear-gradient(135deg,#fff,#68dff0);
-      box-shadow:0 0 18px rgba(255,255,255,.8);
-    }
-    .art-orbit-dot.one {top:18px;right:20%}
-    .art-orbit-dot.two {bottom:19px;left:13%;width:9px;height:9px}
-    .art-label {
-      position:absolute;right:0;bottom:5px;
-      padding:10px 14px;border-radius:13px;
-      border:1px solid rgba(255,255,255,.2);
-      background:rgba(9,17,42,.72);
-      font-size:10px;font-weight:900;letter-spacing:1px;
-      box-shadow:0 10px 25px rgba(0,0,0,.25);
-    }
-    @keyframes ringFloat {
-      0%,100% {transform:translateY(0) rotate(-5deg)}
-      50% {transform:translateY(-10px) rotate(5deg)}
-    }
+/* SECTIONS */
+.studio-section{margin-top:30px}
+.studio-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:14px}
+.studio-heading h2{margin:0;font-size:clamp(20px,3vw,25px);letter-spacing:-.6px}
+.studio-overline{display:block;margin-bottom:6px;color:var(--ep-blue);font-size:10px;font-weight:900;letter-spacing:1.7px}
+.studio-panel{
+ position:relative;overflow:hidden;padding:clamp(17px,3vw,27px);
+ border:1px solid var(--border,rgba(255,255,255,.13));
+ border-radius:23px;background:var(--surface,rgba(255,255,255,.055));
+ box-shadow:0 15px 38px rgba(0,0,0,.09),inset 0 1px 0 rgba(255,255,255,.06);
+ backdrop-filter:blur(17px);
+}
+.studio-panel:before{
+ content:"";position:absolute;top:0;left:22px;right:22px;height:2px;
+ background:linear-gradient(90deg,#55aaff,#35e0d0,#ff83c8);
+}
+.split-intro{display:flex;align-items:center;gap:14px;margin-bottom:21px}
+.split-icon{
+ width:51px;height:51px;flex:0 0 51px;display:grid;place-items:center;
+ border-radius:16px;color:white;font-size:23px;
+ background:linear-gradient(145deg,#398fe9,#7963d9);
+ box-shadow:0 9px 24px rgba(77,115,220,.3);
+}
+.split-intro h2{margin:0 0 5px;font-size:17px}
+.split-intro p{margin:0;color:var(--muted,#aab5c6);font-size:12px}
+#splitForm{gap:17px}
+#splitStory,#episodeSearch{
+ width:100%;max-width:100%;min-height:50px;padding:12px 15px;
+ border-radius:14px;border:1px solid var(--border,rgba(255,255,255,.16));
+ background:var(--surface,rgba(255,255,255,.06));
+}
+.split-tip{
+ display:flex;gap:12px;padding:16px;border-radius:16px;
+ border:1px solid rgba(53,224,208,.2);
+ background:linear-gradient(110deg,rgba(53,224,208,.09),rgba(85,170,255,.07));
+}
+.split-tip span{font-size:23px}
+.split-tip b{display:block;margin-bottom:5px}
+.split-tip p{margin:0;line-height:1.65}
+#splitForm button[type="submit"]{
+ width:100%;min-height:53px;border:0;border-radius:15px;
+ background:linear-gradient(100deg,#398fe9,#6e70e7 55%,#a36cdb);
+ color:white;font-weight:900;letter-spacing:.3px;
+ box-shadow:0 11px 26px rgba(83,117,221,.28);transition:transform .2s,filter .2s;
+}
+#splitForm button[type="submit"]:active{transform:scale(.985);filter:brightness(1.12)}
 
-    /* FEATURE CARDS */
-    .studio-features {
-      display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
-      gap:13px;margin:18px 0 32px;
-    }
-    .studio-feature {
-      display:flex;align-items:center;gap:13px;
-      min-width:0;padding:16px;
-      border:1px solid var(--border,rgba(255,255,255,.12));
-      border-radius:19px;background:var(--surface,rgba(255,255,255,.055));
-      box-shadow:0 9px 25px rgba(0,0,0,.07);
-      backdrop-filter:blur(16px);
-    }
-    .feature-icon {
-      width:43px;height:43px;flex:0 0 43px;
-      display:grid;place-items:center;border-radius:14px;
-      background:rgba(85,170,255,.15);font-size:21px;
-    }
-    .studio-feature:nth-child(2) .feature-icon {background:rgba(53,224,208,.14)}
-    .studio-feature:nth-child(3) .feature-icon {background:rgba(255,131,200,.14)}
-    .studio-feature strong {display:block;font-size:13px}
-    .studio-feature small {
-      display:block;margin-top:4px;color:var(--muted,#aab5c6);
-      font-size:10px;line-height:1.5;
-    }
+/* PREVIEW AND SAVED */
+.preview-shell,.saved-shell{
+ min-height:85px;padding:16px;border:1px solid var(--border,rgba(255,255,255,.12));
+ border-radius:20px;background:var(--surface,rgba(255,255,255,.035));
+}
+#savedEpisodeCount{
+ padding:8px 13px;border-radius:30px;border:1px solid rgba(85,170,255,.22);
+ background:rgba(85,170,255,.12);color:var(--studio-blue,#55aaff);white-space:nowrap;
+}
+.publish-note{
+ display:flex;gap:12px;padding:15px;margin-bottom:18px;
+ border:1px solid rgba(255,131,200,.2);border-radius:16px;
+ background:linear-gradient(110deg,rgba(255,131,200,.09),rgba(255,198,110,.06));
+}
+.publish-note .note-icon{font-size:23px}
+.publish-note p{margin:5px 0 0;line-height:1.65}
+.search-label{display:block;margin-bottom:13px;font-size:13px;font-weight:800}
+#savedEpisodeList .list-item{
+ padding:17px;margin-bottom:13px;border-radius:18px;
+ border:1px solid var(--border,rgba(255,255,255,.12));
+ background:var(--surface,rgba(255,255,255,.05));
+ box-shadow:0 8px 22px rgba(0,0,0,.06);
+}
+#savedEpisodeList .episode-number{
+ display:inline-flex;padding:6px 10px;border-radius:30px;
+ background:rgba(85,170,255,.13);color:var(--studio-blue,#55aaff);
+ font-size:11px;font-weight:900;
+}
+.episode-content-preview{line-height:1.75;opacity:.88}
+.item-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
+.item-actions button{border-radius:11px}
 
-    /* SECTIONS */
-    .studio-section {margin-top:30px}
-    .studio-heading {
-      display:flex;justify-content:space-between;
-      align-items:center;gap:12px;margin-bottom:14px;
-    }
-    .studio-heading h2 {
-      margin:0;font-size:clamp(20px,3vw,25px);
-      letter-spacing:-.6px;
-    }
-    .studio-overline {
-      display:block;margin-bottom:6px;
-      color:var(--studio-blue);font-size:10px;
-      font-weight:900;letter-spacing:1.7px;
-    }
-    .studio-panel {
-      position:relative;overflow:hidden;
-      padding:clamp(17px,3vw,27px);
-      border:1px solid var(--border,rgba(255,255,255,.13));
-      border-radius:23px;background:var(--surface,rgba(255,255,255,.055));
-      box-shadow:0 15px 38px rgba(0,0,0,.09),
-        inset 0 1px 0 rgba(255,255,255,.06);
-      backdrop-filter:blur(17px);
-    }
-    .studio-panel:before {
-      content:"";position:absolute;top:0;left:22px;right:22px;height:2px;
-      background:linear-gradient(90deg,#55aaff,#35e0d0,#ff83c8);
-    }
-    .split-intro {
-      display:flex;align-items:center;gap:14px;margin-bottom:21px;
-    }
-    .split-icon {
-      width:51px;height:51px;flex:0 0 51px;
-      display:grid;place-items:center;border-radius:16px;
-      color:white;font-size:23px;
-      background:linear-gradient(145deg,#398fe9,#7963d9);
-      box-shadow:0 9px 24px rgba(77,115,220,.3);
-    }
-    .split-intro h2 {margin:0 0 5px;font-size:17px}
-    .split-intro p {margin:0;color:var(--muted,#aab5c6);font-size:12px}
-    #splitForm {gap:17px}
-    #splitStory,#episodeSearch {
-      width:100%;max-width:100%;min-height:50px;
-      padding:12px 15px;border-radius:14px;
-      border:1px solid var(--border,rgba(255,255,255,.16));
-      background:var(--surface,rgba(255,255,255,.06));
-    }
-    .split-tip {
-      display:flex;gap:12px;padding:16px;
-      border-radius:16px;border:1px solid rgba(53,224,208,.2);
-      background:linear-gradient(110deg,rgba(53,224,208,.09),rgba(85,170,255,.07));
-    }
-    .split-tip span {font-size:23px}
-    .split-tip b {display:block;margin-bottom:5px}
-    .split-tip p {margin:0;line-height:1.65}
-    #splitForm button[type="submit"] {
-      width:100%;min-height:53px;border:0;border-radius:15px;
-      background:linear-gradient(100deg,#398fe9,#6e70e7 55%,#a36cdb);
-      color:white;font-weight:900;letter-spacing:.3px;
-      box-shadow:0 11px 26px rgba(83,117,221,.28);
-      transition:transform .2s,filter .2s;
-    }
-    #splitForm button[type="submit"]:active {
-      transform:scale(.985);filter:brightness(1.12);
-    }
+/* READER */
+#episodeReaderPanel{
+ padding:clamp(18px,4vw,30px);border:1px solid rgba(85,170,255,.24);
+ border-radius:24px;background:var(--surface,rgba(255,255,255,.06));
+ box-shadow:0 17px 42px rgba(0,0,0,.12);
+}
+.story-reading-text{
+ font-size:16px;line-height:1.95;white-space:pre-wrap;
+ overflow-wrap:anywhere;max-width:780px;margin:22px auto;
+}
 
-    /* PREVIEW AND SAVED */
-    .preview-shell,.saved-shell {
-      min-height:85px;padding:16px;
-      border:1px solid var(--border,rgba(255,255,255,.12));
-      border-radius:20px;background:var(--surface,rgba(255,255,255,.035));
-    }
-    #savedEpisodeCount {
-      padding:8px 13px;border-radius:30px;
-      border:1px solid rgba(85,170,255,.22);
-      background:rgba(85,170,255,.12);color:var(--studio-blue);
-      white-space:nowrap;
-    }
-    .publish-note {
-      display:flex;gap:12px;padding:15px;margin-bottom:18px;
-      border:1px solid rgba(255,131,200,.2);border-radius:16px;
-      background:linear-gradient(110deg,rgba(255,131,200,.09),rgba(255,198,110,.06));
-    }
-    .publish-note .note-icon {font-size:23px}
-    .publish-note p {margin:5px 0 0;line-height:1.65}
-    .search-label {display:block;margin-bottom:13px;font-size:13px;font-weight:800}
-    #savedEpisodeList .list-item {
-      padding:17px;margin-bottom:13px;border-radius:18px;
-      border:1px solid var(--border,rgba(255,255,255,.12));
-      background:var(--surface,rgba(255,255,255,.05));
-      box-shadow:0 8px 22px rgba(0,0,0,.06);
-    }
-    #savedEpisodeList .episode-number {
-      display:inline-flex;padding:6px 10px;border-radius:30px;
-      background:rgba(85,170,255,.13);color:var(--studio-blue);
-      font-size:11px;font-weight:900;
-    }
-    .episode-content-preview {line-height:1.75;opacity:.88}
-    .item-actions {display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
-    .item-actions button {border-radius:11px}
-
-    /* READER */
-    #episodeReaderPanel {
-      padding:clamp(18px,4vw,30px);
-      border:1px solid rgba(85,170,255,.24);
-      border-radius:24px;background:var(--surface,rgba(255,255,255,.06));
-      box-shadow:0 17px 42px rgba(0,0,0,.12);
-    }
-    .story-reading-text {
-      font-size:16px;line-height:1.95;
-      white-space:pre-wrap;overflow-wrap:anywhere;
-      max-width:780px;margin:22px auto;
-    }
-
-    @media(max-width:680px) {
-      body[data-page="episodes"] .page-content {padding:17px 13px 35px}
-      .studio-hero {
-        grid-template-columns:1fr;gap:0;min-height:unset;
-        padding:25px 21px 12px;border-radius:24px;
-      }
-      .studio-hero h1 {font-size:38px}
-      .studio-art {min-height:145px}
-      .art-ring {width:125px;height:125px}
-      .art-book {width:76px;height:103px;font-size:35px}
-      .art-book:after {height:91px}
-      .art-label {right:7%;bottom:0}
-      .studio-features {gap:8px}
-      .studio-feature {
-        flex-direction:column;align-items:flex-start;
-        gap:8px;padding:11px;border-radius:15px;
-      }
-      .feature-icon {width:35px;height:35px;flex-basis:35px;font-size:17px}
-      .studio-feature strong {font-size:11px}
-      .studio-feature small {font-size:9px}
-      .studio-panel {border-radius:19px}
-      .studio-heading {align-items:flex-start}
-    }
-    @media(max-width:360px) {
-      .studio-feature {padding:8px}
-      .studio-feature small {font-size:9px}
-      .studio-hero h1 {font-size:33px}
-    }
-    @media(prefers-reduced-motion:no-preference) {
-      .studio-hero {animation:studioEnter .65s ease both}
-      .studio-feature {animation:studioEnter .6s ease both}
-      .studio-feature:nth-child(2) {animation-delay:.08s}
-      .studio-feature:nth-child(3) {animation-delay:.16s}
-      @keyframes studioEnter {
-        from {opacity:0;transform:translateY(13px)}
-        to {opacity:1;transform:translateY(0)}
-      }
-    }
-  </style>
+@media(max-width:680px){
+ body[data-page="episodes"] .page-content{padding:17px 13px 35px}
+ .studio-hero{grid-template-columns:1fr;gap:0;min-height:unset;padding:25px 21px 12px;border-radius:24px}
+ .studio-hero h1{font-size:38px}
+ .studio-art{min-height:145px}
+ .art-ring{width:125px;height:125px}
+ .art-book{width:76px;height:103px;font-size:35px}
+ .art-book:after{height:91px}
+ .art-label{right:7%;bottom:0}
+ .studio-features{gap:8px}
+ .studio-feature{flex-direction:column;align-items:flex-start;gap:8px;padding:11px;border-radius:15px}
+ .feature-icon{width:35px;height:35px;flex-basis:35px;font-size:17px}
+ .studio-feature strong{font-size:11px}
+ .studio-feature small{font-size:9px}
+ .studio-panel{border-radius:19px}
+ .studio-heading{align-items:flex-start}
+}
+@media(max-width:360px){
+ .studio-feature{padding:8px}
+ .studio-feature small{font-size:9px}
+ .studio-hero h1{font-size:33px}
+}
+@media(prefers-reduced-motion:no-preference){
+ .studio-hero{animation:studioEnter .65s ease both}
+ .studio-feature{animation:studioEnter .6s ease both}
+ .studio-feature:nth-child(2){animation-delay:.08s}
+ .studio-feature:nth-child(3){animation-delay:.16s}
+ @keyframes studioEnter{from{opacity:0;transform:translateY(13px)}to{opacity:1;transform:translateY(0)}}
+}
+</style>
 </head>
 
 <body data-page="episodes">
 <div class="app-layout">
 
-  <aside class="sidebar">
-    <a class="brand" href="home.html">
-      <span class="brand-mark small-mark">CS</span>
-      <span>Channel<span class="brand-accent">Studio</span>
-        <small>YOUR CREATOR SPACE</small>
-      </span>
-    </a>
+<aside class="sidebar">
+<a class="brand" href="home.html">
+<span class="brand-mark small-mark">CS</span>
+<span>Channel<span class="brand-accent">Studio</span><small>YOUR CREATOR SPACE</small></span>
+</a>
+<nav class="main-nav" aria-label="Main navigation">
+<a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
+<a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
+<a class="nav-link" href="library.html"><span>📚</span><b>Library</b></a>
+<a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
+<a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
+</nav>
+<div class="sidebar-bottom">
+<p class="small muted">Keep creating. Keep your stories safe.</p>
+</div>
+</aside>
 
-    <nav class="main-nav" aria-label="Main navigation">
-      <a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
-      <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-      <a class="nav-link" href="library.html"><span>📚</span><b>Library</b></a>
-      <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
-      <a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-    </nav>
+<div class="main-column">
+<header class="topbar">
+<button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
+<div>
+<p class="eyebrow">CHANNEL STUDIO</p>
+<p class="topbar-title">Episode Studio</p>
+</div>
+<div class="topbar-actions">
+<button id="quickTheme" class="icon-button" aria-label="Toggle theme" title="Toggle theme">◐</button>
+<a class="avatar-link" href="settings.html" aria-label="Settings">CS</a>
+</div>
+</header>
 
-    <div class="sidebar-bottom">
-      <p class="small muted">Keep creating. Keep your stories safe.</p>
-    </div>
-  </aside>
+<main class="page-content page-enter">
 
-  <div class="main-column">
-    <header class="topbar">
-      <button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
-      <div>
-        <p class="eyebrow">CHANNEL STUDIO</p>
-        <p class="topbar-title">Episode Studio</p>
-      </div>
-      <div class="topbar-actions">
-        <button id="quickTheme" class="icon-button" aria-label="Toggle theme" title="Toggle theme">◐</button>
-        <a class="avatar-link" href="settings.html" aria-label="Settings">CS</a>
-      </div>
-    </header>
+<section class="studio-hero">
+<div>
+<span class="studio-kicker">YOUR CREATOR WORKSHOP</span>
+<h1>Every story deserves its <span>moment.</span></h1>
+<p>Transform your long stories into engaging episodes. Create, preview, organise and read your episodes in one beautiful workspace.</p>
+</div>
+<div class="studio-art" aria-hidden="true">
+<span class="art-orbit-dot one"></span>
+<span class="art-orbit-dot two"></span>
+<div class="art-ring"><div class="art-book">📖</div></div>
+<span class="art-label">STORY IN MOTION</span>
+</div>
+</section>
 
-    <main class="page-content page-enter">
+<section class="studio-features">
+<div class="studio-feature">
+<span class="feature-icon">✂️</span>
+<div><strong>Smart splitting</strong><small>250–300 words where possible</small></div>
+</div>
+<div class="studio-feature">
+<span class="feature-icon">🛡️</span>
+<div><strong>Text protection</strong><small>Full-text coverage checking</small></div>
+</div>
+<div class="studio-feature">
+<span class="feature-icon">📚</span>
+<div><strong>Season folders</strong><small>Organised episode collections</small></div>
+</div>
+</section>
 
-      <section class="studio-hero">
-        <div>
-          <span class="studio-kicker">YOUR CREATOR WORKSHOP</span>
-          <h1>Every story deserves its <span>moment.</span></h1>
-          <p>
-            Transform your long stories into engaging episodes.
-            Create, preview, organise and read your episodes in one beautiful workspace.
-          </p>
-        </div>
-        <div class="studio-art" aria-hidden="true">
-          <span class="art-orbit-dot one"></span>
-          <span class="art-orbit-dot two"></span>
-          <div class="art-ring">
-            <div class="art-book">📖</div>
-          </div>
-          <span class="art-label">STORY IN MOTION</span>
-        </div>
-      </section>
+<section class="studio-section">
+<div class="studio-heading">
+<div><span class="studio-overline">01 / CREATE</span><h2>Build your episodes</h2></div>
+<span class="pill">Episode Splitter</span>
+</div>
+<div class="studio-panel">
+<div class="split-intro">
+<span class="split-icon">✂️</span>
+<div><h2>Season episode splitter</h2><p>Choose a saved story to begin.</p></div>
+</div>
+<form id="splitForm" class="form-grid">
+<label class="full">
+Choose a story
+<select id="splitStory" required>
+<option value="">Select a saved story…</option>
+</select>
+</label>
+<div class="full split-tip">
+<span>💡</span>
+<div>
+<b>How the splitter works</b>
+<p class="small muted">Target 250–300 words · maximum 13 episodes per season folder · overflow continues in the next unused season · 220 words/minute.</p>
+</div>
+</div>
+<div class="full">
+<button class="button primary" type="submit">Create episode preview</button>
+</div>
+</form>
+</div>
+</section>
 
-      <section class="studio-features">
-        <div class="studio-feature">
-          <span class="feature-icon">✂️</span>
-          <div><strong>Smart splitting</strong><small>250–300 words where possible</small></div>
-        </div>
-        <div class="studio-feature">
-          <span class="feature-icon">🛡️</span>
-          <div><strong>Text protection</strong><small>Full-text coverage checking</small></div>
-        </div>
-        <div class="studio-feature">
-          <span class="feature-icon">📚</span>
-          <div><strong>Season folders</strong><small>Organised episode collections</small></div>
-        </div>
-      </section>
+<section class="studio-section">
+<div class="studio-heading">
+<div><span class="studio-overline">02 / REVIEW</span><h2>Episode preview</h2></div>
+<span class="pill">Review before saving</span>
+</div>
+<div id="episodePreview" class="episode-grid preview-shell">
+<div class="empty-state">📖 Choose a story to create a preview.</div>
+</div>
+</section>
 
-      <section class="studio-section">
-        <div class="studio-heading">
-          <div><span class="studio-overline">01 / CREATE</span><h2>Build your episodes</h2></div>
-          <span class="pill">Episode Splitter</span>
-        </div>
+<section class="studio-section">
+<div class="studio-heading">
+<div><span class="studio-overline">03 / YOUR COLLECTION</span><h2>Saved episodes</h2></div>
+<span class="pill" id="savedEpisodeCount">0 episodes</span>
+</div>
+<div class="saved-shell">
+<div class="publish-note">
+<span class="note-icon">📤</span>
+<div>
+<b>Ready to publish?</b>
+<p class="small muted">Use <b>Copy text</b> to copy the complete episode. Use <b>Post / Share</b> to open Android's sharing menu where supported. Choose WhatsApp, select your Channel, review the message and tap Send.</p>
+</div>
+</div>
+<label class="search-label">
+🔎 Search episodes
+<input id="episodeSearch" type="search" placeholder="Search episode or season title…">
+</label>
+<div id="savedEpisodeList" class="stack-list">
+<div class="empty-state">Your saved episodes will appear here.</div>
+</div>
+</div>
+</section>
 
-        <div class="studio-panel">
-          <div class="split-intro">
-            <span class="split-icon">✂️</span>
-            <div><h2>Season episode splitter</h2><p>Choose a saved story to begin.</p></div>
-          </div>
+<section class="studio-section" id="episodeReaderPanel" hidden>
+<div class="studio-heading">
+<div><span class="studio-overline">YOUR READING SPACE</span><h2 id="episodeReaderTitle">Episode reader</h2></div>
+<button class="button ghost small-button" id="closeEpisodeReader" type="button">Close reader</button>
+</div>
+<p id="episodeReaderMeta" class="small muted"></p>
+<article id="episodeReaderText" class="story-reading-text"></article>
+</section>
 
-          <form id="splitForm" class="form-grid">
-            <label class="full">
-              Choose a story
-              <select id="splitStory" required>
-                <option value="">Select a saved story…</option>
-              </select>
-            </label>
+</main>
 
-            <div class="full split-tip">
-              <span>💡</span>
-              <div>
-                <b>How the splitter works</b>
-                <p class="small muted">
-                  Target 250–300 words · maximum 13 episodes per season folder ·
-                  overflow continues in the next unused season · 220 words/minute.
-                </p>
-              </div>
-            </div>
-
-            <div class="full">
-              <button class="button primary" type="submit">Create episode preview</button>
-            </div>
-          </form>
-        </div>
-      </section>
-
-      <section class="studio-section">
-        <div class="studio-heading">
-          <div><span class="studio-overline">02 / REVIEW</span><h2>Episode preview</h2></div>
-          <span class="pill">Review before saving</span>
-        </div>
-        <div id="episodePreview" class="episode-grid preview-shell">
-          <div class="empty-state">📖 Choose a story to create a preview.</div>
-        </div>
-      </section>
-
-      <section class="studio-section">
-        <div class="studio-heading">
-          <div><span class="studio-overline">03 / YOUR COLLECTION</span><h2>Saved episodes</h2></div>
-          <span class="pill" id="savedEpisodeCount">0 episodes</span>
-        </div>
-
-        <div class="saved-shell">
-          <div class="publish-note">
-            <span class="note-icon">📤</span>
-            <div>
-              <b>Ready to publish?</b>
-              <p class="small muted">
-                Use <b>Copy text</b> to copy the complete episode.
-                Use <b>Post / Share</b> to open Android's sharing menu where supported.
-                Choose WhatsApp, select your Channel, review the message and tap Send.
-              </p>
-            </div>
-          </div>
-
-          <label class="search-label">
-            🔎 Search episodes
-            <input id="episodeSearch" type="search" placeholder="Search episode or season title…">
-          </label>
-
-          <div id="savedEpisodeList" class="stack-list">
-            <div class="empty-state">Your saved episodes will appear here.</div>
-          </div>
-        </div>
-      </section>
-
-      <section class="studio-section" id="episodeReaderPanel" hidden>
-        <div class="studio-heading">
-          <div><span class="studio-overline">YOUR READING SPACE</span><h2 id="episodeReaderTitle">Episode reader</h2></div>
-          <button class="button ghost small-button" id="closeEpisodeReader" type="button">Close reader</button>
-        </div>
-        <p id="episodeReaderMeta" class="small muted"></p>
-        <article id="episodeReaderText" class="story-reading-text"></article>
-      </section>
-
-    </main>
-
-    <footer class="app-footer">
-      Made for your stories
-      <span class="muted">Local-first • Your content stays yours</span>
-    </footer>
-  </div>
+<footer class="app-footer">
+Made for your stories
+<span class="muted">Local-first • Your content stays yours</span>
+</footer>
+</div>
 </div>
 
 <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
