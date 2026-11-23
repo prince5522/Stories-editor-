@@ -3,7 +3,7 @@
 <html lang="en" data-theme="system">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <script src="./app-shell-behavior.js"></script>
 <meta name="theme-color" content="#101827">
 <meta name="description" content="Read and extract text from common document formats in Channel Studio.">
@@ -13,37 +13,111 @@
 <link rel="stylesheet" href="./animations.css">
 <link rel="stylesheet" href="./themes.css">
 <link rel="stylesheet" href="./whatsapp-shell.css">
+
+<style>
+.doc-hero{
+position:relative;overflow:hidden;display:flex;align-items:center;
+justify-content:space-between;gap:24px;padding:30px;
+border-radius:26px;
+background:linear-gradient(125deg,#142c50,#245b8d 58%,#438fc0);
+color:white;min-height:220px;
+box-shadow:0 18px 45px #102b4930;
+}
+.doc-hero:after{
+content:"";position:absolute;width:260px;height:260px;
+right:65px;top:-145px;border-radius:50%;
+border:1px solid #ffffff35;
+box-shadow:0 0 0 28px #ffffff0c,0 0 0 58px #ffffff09;
+}
+.doc-hero h1{font-size:clamp(2rem,5vw,3.4rem);line-height:1.05;margin:10px 0}
+.doc-hero h1 span{color:#a9dcff}
+.doc-hero p{max-width:580px;color:#e2efff;line-height:1.7}
+.doc-hero-icon{
+position:relative;z-index:1;flex-shrink:0;
+width:125px;height:125px;border-radius:32px;
+display:grid;place-items:center;font-size:64px;
+background:#ffffff18;border:1px solid #ffffff38;
+box-shadow:inset 0 1px #ffffff30,0 15px 35px #07182b35;
+transform:rotate(5deg);
+}
+.doc-format-chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:18px}
+.doc-format-chips span{
+padding:7px 11px;border-radius:30px;
+background:#ffffff19;border:1px solid #ffffff30;
+font-size:11px;font-weight:800;letter-spacing:.4px;
+}
+.doc-upload-panel{padding:20px}
+.doc-drop{
+min-height:210px;border:2px dashed var(--border-color,#aab7c8);
+border-radius:22px;display:flex;flex-direction:column;
+align-items:center;justify-content:center;gap:10px;
+text-align:center;padding:25px;cursor:pointer;
+background:linear-gradient(145deg,#438fc00b,#438fc018);
+transition:.2s;
+}
+.doc-drop:active{transform:scale(.99)}
+.doc-drop input{position:absolute;width:1px;height:1px;opacity:0}
+.doc-drop-icon{
+width:54px;height:54px;border-radius:18px;
+display:grid;place-items:center;font-size:30px;
+background:#287dc21b;color:#348bd0;
+}
+.doc-drop strong{font-size:17px}
+.doc-tools{display:flex;flex-wrap:wrap;gap:9px;margin:16px 0}
+.doc-tools input{flex:1;min-width:180px}
+.doc-content{
+min-height:300px;max-height:65vh;overflow:auto;
+white-space:pre-wrap;overflow-wrap:anywhere;
+padding:22px;border-radius:18px;
+border:1px solid var(--border-color,#d8e0eb);
+background:var(--surface-2,rgba(120,140,160,.08));
+font-family:inherit;line-height:1.85;font-size:15px;
+}
+.doc-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:15px}
+.doc-actions button{flex:1;min-width:125px}
+.doc-reader-card{
+border-radius:22px;padding:20px;
+background:var(--surface,rgba(120,140,160,.06));
+}
+.doc-status-line{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.doc-hero .eyebrow{color:#c4e5ff}
+.doc-hero p{margin-bottom:0}
+.doc-format-chips span{white-space:nowrap}
+@media(max-width:600px){
+.doc-hero{padding:23px;min-height:unset}
+.doc-hero-icon{width:75px;height:75px;font-size:40px;border-radius:22px}
+.doc-hero h1{font-size:2.2rem}
+.doc-hero-icon{align-self:flex-start}
+.doc-tools button{flex:1}
+.doc-content{padding:15px;min-height:260px}
+}
+</style>
 </head>
+
 <body data-page="docs">
 <div class="app-layout">
+
 <aside class="sidebar">
 <a class="brand" href="home.html">
 <span class="brand-mark small-mark">CS</span>
 <span>Channel<span class="brand-accent">Studio</span><small>YOUR CREATOR SPACE</small></span>
 </a>
+
 <nav class="main-nav" aria-label="Main navigation">
 <a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
-<a class="nav-link" href="stories.html"><span>▤</span><b>Stories</b></a>
-<a class="nav-link" href="episodes.html"><span>▥</span><b>Episodes</b></a>
 <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-<a class="nav-link" href="planner.html"><span>◷</span><b>Planner</b></a>
-<a class="nav-link" href="hype.html"><span>↗</span><b>Hype</b></a>
+<a class="nav-link" href="library.html"><span>▤</span><b>Library</b></a>
 <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
-<a class="nav-link active" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-<a class="nav-link" href="channels.html"><span>◎</span><b>Channels</b></a>
-<a class="nav-link" href="complaints.html"><span>⚑</span><b>Complaints</b></a>
-<a class="nav-link" href="reviews.html"><span>★</span><b>Reviews</b></a>
-<a class="nav-link" href="notifications.html"><span>♧</span><b>Alerts</b></a>
-<a class="nav-link" href="backup.html"><span>▣</span><b>Backup</b></a>
-<a class="nav-link" href="settings.html"><span>⚙</span><b>Settings</b></a>
+<a class="nav-link active" href="docs.html"><span>▧</span><b>Document Reader</b></a>
 </nav>
+
 <div class="sidebar-bottom">
-<a class="nav-link" href="index.html"><span>↗</span><b>Welcome screen</b></a>
 <p class="small muted">Read, create, and keep moving.</p>
 </div>
 </aside>
 
 <div class="main-column">
+
 <header class="topbar">
 <button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
 <div>
@@ -57,20 +131,33 @@
 </header>
 
 <main class="page-content page-enter">
+
 <section class="doc-hero">
 <div>
-<p class="eyebrow">ONE PLACE FOR YOUR FILES</p>
-<h1>Read more.<br><span>Search smarter.</span></h1>
-<p>Open a document, extract its text, find keywords, copy notes, or save the text as a story draft.</p>
+<p class="eyebrow">YOUR DIGITAL READING DESK</p>
+<h1>Read more.<br><span>Discover everything.</span></h1>
+<p>Open documents, extract text, search for important details, copy notes or turn your document into a story draft.</p>
+
 <div class="doc-format-chips">
-<span>PDF</span><span>DOCX</span><span>XLSX</span><span>PPTX</span>
-<span>TXT / MD</span><span>CSV / JSON</span><span>HTML / XML</span><span>RTF / ODT / EPUB</span>
+<span>PDF</span><span>DOCX</span><span>XLSX</span>
+<span>PPTX</span><span>TXT / MD</span>
+<span>CSV / JSON</span><span>HTML / XML</span>
+<span>RTF / ODT / EPUB</span>
 </div>
 </div>
+
 <div class="doc-hero-icon" aria-hidden="true">📚</div>
 </section>
 
 <section class="panel doc-upload-panel">
+<div class="section-heading">
+<div>
+<p class="eyebrow">IMPORT DOCUMENT</p>
+<h2>Bring your files in</h2>
+</div>
+<span class="pill">Local reading</span>
+</div>
+
 <label class="doc-drop" id="docDrop">
 <input id="documentFile" type="file" accept=".pdf,.txt,.md,.csv,.json,.html,.htm,.xml,.rtf,.docx,.xlsx,.xls,.pptx,.odt,.epub,application/pdf">
 <span class="doc-drop-icon">＋</span>
@@ -78,10 +165,12 @@
 <span class="muted small">Tap to browse or select a file from your phone.</span>
 <span class="small muted">Files are processed in this browser. They are not uploaded to a server.</span>
 </label>
+
 <p id="docStatus" class="small muted" aria-live="polite">Ready when you are.</p>
 </section>
 
-<section class="section-block">
+<section class="section-block doc-reader-card">
+
 <div class="section-heading">
 <div>
 <p class="eyebrow">READING DESK</p>
@@ -89,6 +178,7 @@
 </div>
 <span class="pill" id="docMeta">No file opened</span>
 </div>
+
 <div class="doc-tools">
 <input id="docSearch" type="search" placeholder="Find a word or phrase…" aria-label="Search document" disabled>
 <button class="button ghost" id="prevMatch" disabled>↑ Previous</button>
@@ -96,25 +186,31 @@
 <button class="button ghost" id="smallerText" disabled>A−</button>
 <button class="button ghost" id="largerText" disabled>A+</button>
 </div>
+
 <div id="docSearchStatus" class="small muted"></div>
+
 <pre id="docContent" class="doc-content" tabindex="0">Choose a supported document above. Extracted text will be displayed here for reading and searching.</pre>
+
 <div class="row-wrap doc-actions">
 <button class="button primary" id="copyDocument" disabled>Copy text</button>
 <button class="button ghost" id="downloadText" disabled>Download as TXT</button>
 <button class="button ghost" id="saveAsStory" disabled>Save as story</button>
 <button class="button ghost" id="clearDocument" disabled>Close document</button>
 </div>
+
 </section>
 
 <section class="notice info">
-<p><strong>Format note:</strong> this reader extracts readable text from common formats. It cannot perfectly reproduce original page layout, images, formulas, or complex formatting. Scanned PDFs need OCR; legacy binary DOC/PPT files and password-protected files are not supported. Office/EPUB/ODT files need internet access to load their reader libraries.</p>
+<p><strong>Format note:</strong> This reader extracts readable text from common formats. It cannot perfectly reproduce original page layout, images, formulas or complex formatting. Scanned PDFs need OCR; legacy binary DOC/PPT files and password-protected files are not supported. Office/EPUB/ODT files need internet access to load their reader libraries.</p>
 </section>
+
 </main>
 
 <footer class="app-footer">
-A calmer way to read <span>✦</span>
+Your space to read and create.
 <span class="muted">Private by design • Local-first</span>
 </footer>
+
 </div>
 </div>
 
@@ -133,5 +229,6 @@ A calmer way to read <span>✦</span>
 <script src="./app.js"></script>
 <script src="./documents.js"></script>
 <script src="./whatsapp-shell.js"></script>
+
 </body>
 </html>
