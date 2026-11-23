@@ -1,1 +1,14 @@
-document.addEventListener('DOMContentLoaded',()=>{const toggle=document.getElementById('menuToggle');const side=document.querySelector('.sidebar');if(toggle&&side)toggle.addEventListener('click',()=>side.classList.toggle('open'));document.addEventListener('click',e=>{if(side&&side.classList.contains('open')&&!side.contains(e.target)&&e.target!==toggle)side.classList.remove('open')})});
+
+/*
+ * STORIES EDITOR — EFFECTS
+ *
+ * Sidebar navigation is handled centrally by
+ * app-shell-behavior.js.
+ *
+ * Do not attach another sidebar click listener here.
+ * This prevents one click from opening and closing
+ * the sidebar immediately.
+ *
+ * Other page effects can be added here without
+ * interfering with shared navigation.
+ */
