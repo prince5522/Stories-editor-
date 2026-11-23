@@ -6,7 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#101827">
   <meta name="description" content="Keep every season and story draft together.">
-
   <title>Story Library — Stories Editor</title>
 
   <link rel="manifest" href="./manifest.webmanifest">
@@ -19,40 +18,31 @@
 </head>
 
 <body data-page="stories">
-
 <div class="app-layout">
 
   <aside class="sidebar">
-    <a class="brand" href="home.html">
-      <span class="brand-mark small-mark">CS</span>
-      <span>
-        Channel<span class="brand-accent">Studio</span>
-        <small>YOUR CREATOR SPACE</small>
+    <a class="brand" href="./home.html">
+      <span class="brand-mark small-mark">SE</span>
+      <span class="brand-name">
+        <strong>Stories Editor</strong>
+        <small>YOUR CREATIVE WORKSPACE</small>
       </span>
     </a>
 
-    <nav class="main-nav" aria-label="Main navigation">
-      <a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
-      <a class="nav-link active" href="stories.html"><span>▤</span><b>Stories</b></a>
-      <a class="nav-link" href="episodes.html"><span>▥</span><b>Episodes</b></a>
-      <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-      <a class="nav-link" href="planner.html"><span>◷</span><b>Planner</b></a>
-      <a class="nav-link" href="hype.html"><span>↗</span><b>Hype</b></a>
-      <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
-      <a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-      <a class="nav-link" href="channels.html"><span>◎</span><b>Channels</b></a>
-      <a class="nav-link" href="complaints.html"><span>⚑</span><b>Complaints</b></a>
-      <a class="nav-link" href="reviews.html"><span>★</span><b>Reviews</b></a>
-      <a class="nav-link" href="notifications.html"><span>♧</span><b>Alerts</b></a>
-      <a class="nav-link" href="backup.html"><span>▣</span><b>Backup</b></a>
-      <a class="nav-link" href="settings.html"><span>⚙</span><b>Settings</b></a>
-    </nav>
+    <div>
+      <p class="nav-caption">WORKSPACE</p>
+      <nav class="main-nav" aria-label="Main navigation">
+        <a class="nav-link" href="./home.html"><span>⌂</span><b>Home</b></a>
+        <a class="nav-link" href="./ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
+        <a class="nav-link" href="./library.html"><span>▧</span><b>Library</b></a>
+        <a class="nav-link" href="./media.html"><span>▣</span><b>Media Library</b></a>
+        <a class="nav-link" href="./docs.html"><span>▤</span><b>Document Reader</b></a>
+      </nav>
+    </div>
 
     <div class="sidebar-bottom">
-      <a class="nav-link" href="index.html">
-        <span>↗</span><b>Welcome screen</b>
-      </a>
-      <p class="small muted">Keep creating. Keep your stories safe.</p>
+      <strong>✦ Your creative space</strong>
+      <p>Write, organise and prepare your stories in one place.</p>
     </div>
   </aside>
 
@@ -63,7 +53,7 @@
         aria-label="Open menu">☰</button>
 
       <div>
-        <p class="eyebrow">CHANNEL STUDIO</p>
+        <p class="eyebrow">STORIES EDITOR</p>
         <p class="topbar-title">Story Library</p>
       </div>
 
@@ -87,7 +77,6 @@
       </section>
 
       <section class="panel">
-
         <form id="storyForm" class="form-grid">
 
           <label>
@@ -150,12 +139,10 @@
             PDF processing uses PDF.js from a CDN when online.
             Your saved story text is stored locally in this browser.
           </p>
-
         </form>
       </section>
 
       <section class="section-block">
-
         <div class="section-heading">
           <h2>Season library</h2>
           <span class="pill" id="storyLibraryCount">0 seasons</span>
@@ -172,11 +159,9 @@
             Your library is empty. Import your first story above.
           </div>
         </div>
-
       </section>
 
       <section class="section-block" id="storyReaderPanel" hidden>
-
         <div class="section-heading">
           <h2 id="storyReaderTitle">Reading room</h2>
 
@@ -194,7 +179,6 @@
 
         <p id="storyReaderMeta" class="small muted"></p>
         <article id="storyReaderText" class="story-reading-text"></article>
-
       </section>
 
     </main>
@@ -210,21 +194,15 @@
 <div id="toastRegion" class="toast-region"
   aria-live="polite" aria-atomic="true"></div>
 
-<!-- PDF text extraction -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"
   crossorigin="anonymous"></script>
 
-<!-- Core application files -->
 <script src="./storage.js"></script>
 <script src="./themes.js"></script>
 <script src="./transitions.js"></script>
 <script src="./effects.js"></script>
 <script src="./notifications.js"></script>
-
-<!-- Story features -->
 <script src="./story-engine.js?v=uploaded-folders-1"></script>
-
-<!-- Application behavior -->
 <script src="./app.js"></script>
 <script src="./whatsapp-shell.js"></script>
 
