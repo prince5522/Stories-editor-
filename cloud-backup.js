@@ -1,12 +1,13 @@
 
 /* =====================================================
    STORIES EDITOR — SUPABASE CLOUD BACKUP
-   Version 3.0
+   Version 4.0
    - One current backup per account
-   - Updates existing cloud backup instead of creating history
+   - Revision-controlled uploads
+   - Rejects outdated-device uploads
    - Keeps safe restore behaviour
    - Preserves local records
-   - Media syncing will be connected in a later stage
+   - Media syncing will be connected separately
 ===================================================== */
 
 (function () {
@@ -199,23 +200,22 @@
       application: 'Story Studio',
       format: 'story-studio-backup',
       version: 3,
-      cloudBackupVersion: 3,
+      cloudBackupVersion: 4,
       exportedAt: new Date().toISOString(),
       records: records
     };
   }
 
   /*
-   * SINGLE BACKUP PER ACCOUNT
+   * REVISION-SAFE UPLOAD
    *
-   * The unique index on app_backups.user_id was
-   * created in Stage 1.
-   *
-   * upsert updates that account's existing row.
-   * It does not create a backup history.
+   * Read the current revision first.
+   * The database function only accepts the
+   * upload if that revision has not changed.
    */
   async function uploadBackup() {
     const { user, client } = await getAccount();
+
     const snapshot = await createSnapshot();
 
     const json = JSON.stringify(snapshot);
@@ -224,45 +224,74 @@
     if (bytes > MAX_BACKUP_BYTES) {
       throw new Error(
         'Your records backup is larger than 5 MB. ' +
-        'Media files will be handled separately in the next stage.'
+        'Media files will be handled separately.'
       );
     }
 
-    const { data, error } = await client
+    const { data: current, error: readError } = await client
       .from(TABLE)
-      .upsert({
-        user_id: user.id,
-        backup_data: snapshot,
-        backup_version: 3,
-        record_count: Object.keys(snapshot.records).length
-      }, {
-        onConflict: 'user_id'
-      })
-      .select('id, created_at, record_count')
-      .single();
+      .select('revision')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    if (error) throw error;
+    if (readError) throw readError;
+
+    const expectedRevision = current
+      ? Number(current.revision) || 0
+      : 0;
+
+    const { data, error } = await client.rpc(
+      'save_current_story_backup',
+      {
+        p_backup_data: snapshot,
+        p_backup_version: 4,
+        p_record_count: Object.keys(snapshot.records).length,
+        p_expected_revision: expectedRevision
+      }
+    );
+
+    if (error) {
+      const message = String(error.message || error);
+
+      if (message.includes('BACKUP_REVISION_CONFLICT')) {
+        throw new Error(
+          'Backup conflict detected. A newer backup exists on another device. ' +
+          'Your local data has not been uploaded or overwritten. ' +
+          'Refresh the cloud backup before trying again.'
+        );
+      }
+
+      throw error;
+    }
+
+    const saved = Array.isArray(data) ? data[0] : data;
+
+    if (!saved) {
+      throw new Error('The cloud did not confirm the backup.');
+    }
 
     show(
       'Latest cloud backup updated successfully. ' +
-      data.record_count + ' data sections saved. ' +
-      'Previous backup replaced.'
+      Object.keys(snapshot.records).length +
+      ' data sections saved. Revision ' +
+      saved.new_revision +
+      '. Previous backup replaced.'
     );
 
     await listBackups();
 
-    return data;
+    return saved;
   }
 
   /*
-   * There should now be only one row per account.
+   * DISPLAY THE SINGLE CURRENT BACKUP
    */
   async function listBackups() {
     const { user, client } = await getAccount();
 
     const { data, error } = await client
       .from(TABLE)
-      .select('id, created_at, record_count, backup_version')
+      .select('id, created_at, record_count, backup_version, revision')
       .eq('user_id', user.id)
       .limit(1);
 
@@ -293,16 +322,20 @@
 
     const date = document.createElement('p');
     date.textContent = item.created_at
-      ? 'Record created: ' + new Date(
+      ? 'Last updated: ' + new Date(
           item.created_at
         ).toLocaleString()
-      : 'Latest saved backup';
+      : 'Current saved backup';
 
     const count = document.createElement('p');
     count.textContent =
       item.record_count + ' data sections';
 
-    info.append(title, date, count);
+    const revision = document.createElement('p');
+    revision.textContent =
+      'Backup revision: ' + (item.revision || 0);
+
+    info.append(title, date, count, revision);
 
     const restore = document.createElement('button');
     restore.type = 'button';
@@ -318,6 +351,9 @@
     return data;
   }
 
+  /*
+   * RESTORE CURRENT CLOUD BACKUP
+   */
   async function restoreBackup(id) {
     if (!id) return;
 
@@ -419,6 +455,9 @@
     }
   }
 
+  /*
+   * BUTTON ACTIONS
+   */
   async function run(action) {
     const upload = $('cloudBackupUpload');
     const refresh = $('cloudBackupRefresh');
@@ -464,4 +503,5 @@
   } else {
     initialize();
   }
+
 })();
