@@ -16,6 +16,547 @@
   <link rel="stylesheet" href="./whatsapp-shell.css">
 
   <script src="./app-shell-behavior.js"></script>
+
+  <style>
+    body[data-page="episodes"] {
+      --ep-blue: #55a6ff;
+      --ep-cyan: #36d9d0;
+      --ep-pink: #f18bd5;
+      --ep-gold: #ffc66d;
+      background:
+        radial-gradient(ellipse at 8% 5%, rgba(75,145,255,.17), transparent 34%),
+        radial-gradient(ellipse at 92% 18%, rgba(223,105,207,.13), transparent 30%),
+        radial-gradient(ellipse at 70% 90%, rgba(45,207,193,.10), transparent 35%),
+        var(--bg, #101827);
+    }
+
+    body[data-page="episodes"] .main-column {
+      min-width: 0;
+    }
+
+    body[data-page="episodes"] .page-content {
+      width: 100%;
+      max-width: 1150px;
+      margin-inline: auto;
+      padding-top: 26px;
+    }
+
+    body[data-page="episodes"] .ep-hero {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      display: grid;
+      grid-template-columns: minmax(0, 1.35fr) minmax(180px, .65fr);
+      gap: 20px;
+      align-items: center;
+      min-height: 245px;
+      padding: clamp(22px, 4vw, 38px);
+      border: 1px solid rgba(255,255,255,.15);
+      border-radius: 28px;
+      background:
+        linear-gradient(120deg, rgba(28,67,112,.95), rgba(39,37,89,.92) 58%, rgba(92,44,102,.88));
+      box-shadow: 0 22px 55px rgba(0,0,0,.22), inset 0 1px 0 rgba(255,255,255,.16);
+      color: white;
+    }
+
+    body[data-page="episodes"] .ep-hero::before,
+    body[data-page="episodes"] .ep-hero::after {
+      content: "";
+      position: absolute;
+      z-index: -1;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    body[data-page="episodes"] .ep-hero::before {
+      width: 290px;
+      height: 290px;
+      right: 4%;
+      top: -150px;
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 0 0 24px rgba(255,255,255,.035),
+                  0 0 0 52px rgba(255,255,255,.025);
+    }
+
+    body[data-page="episodes"] .ep-hero::after {
+      width: 210px;
+      height: 210px;
+      right: 20%;
+      bottom: -150px;
+      background: rgba(66,206,224,.14);
+      filter: blur(8px);
+    }
+
+    body[data-page="episodes"] .ep-hero-copy {
+      position: relative;
+      z-index: 1;
+    }
+
+    body[data-page="episodes"] .ep-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 12px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 999px;
+      background: rgba(255,255,255,.10);
+      color: #dceeff;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+    }
+
+    body[data-page="episodes"] .ep-hero h1 {
+      margin: 18px 0 10px;
+      color: #fff;
+      font-size: clamp(32px, 5vw, 52px);
+      line-height: 1.04;
+      letter-spacing: -1.8px;
+    }
+
+    body[data-page="episodes"] .ep-hero h1 span {
+      background: linear-gradient(90deg, #74e5ed, #c5a5ff, #ffb8dc);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    body[data-page="episodes"] .ep-hero p {
+      max-width: 570px;
+      color: rgba(255,255,255,.76);
+      line-height: 1.7;
+      margin-bottom: 0;
+    }
+
+    body[data-page="episodes"] .ep-art {
+      position: relative;
+      min-height: 170px;
+      display: grid;
+      place-items: center;
+    }
+
+    body[data-page="episodes"] .ep-art-orbit {
+      width: 155px;
+      height: 155px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.25);
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255,255,255,.16), rgba(255,255,255,.025) 68%);
+      box-shadow: 0 0 45px rgba(91,188,255,.16), inset 0 0 25px rgba(255,255,255,.08);
+      transform: rotate(-12deg);
+    }
+
+    body[data-page="episodes"] .ep-art-core {
+      width: 94px;
+      height: 112px;
+      display: grid;
+      place-items: center;
+      border: 1px solid rgba(255,255,255,.4);
+      border-radius: 17px 17px 24px 24px;
+      background: linear-gradient(145deg, rgba(111,210,255,.92), rgba(119,105,224,.92));
+      box-shadow: 12px 16px 30px rgba(0,0,0,.24), inset 0 1px 0 rgba(255,255,255,.6);
+      color: white;
+      font-size: 43px;
+      transform: rotate(12deg);
+    }
+
+    body[data-page="episodes"] .ep-art-tag {
+      position: absolute;
+      right: 0;
+      bottom: 8px;
+      padding: 9px 12px;
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 13px;
+      background: rgba(12,20,48,.65);
+      color: white;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 8px 25px rgba(0,0,0,.2);
+    }
+
+    body[data-page="episodes"] .ep-feature-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0,1fr));
+      gap: 12px;
+      margin: 17px 0 28px;
+    }
+
+    body[data-page="episodes"] .ep-feature {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      padding: 15px;
+      border: 1px solid var(--border, rgba(255,255,255,.12));
+      border-radius: 18px;
+      background: var(--surface, rgba(255,255,255,.055));
+      box-shadow: 0 8px 24px rgba(0,0,0,.06);
+      backdrop-filter: blur(14px);
+    }
+
+    body[data-page="episodes"] .ep-feature-icon {
+      flex: 0 0 40px;
+      width: 40px;
+      height: 40px;
+      display: grid;
+      place-items: center;
+      border-radius: 13px;
+      background: rgba(79,160,255,.15);
+      color: var(--ep-blue);
+      font-size: 20px;
+    }
+
+    body[data-page="episodes"] .ep-feature:nth-child(2) .ep-feature-icon {
+      background: rgba(54,217,208,.14);
+      color: var(--ep-cyan);
+    }
+
+    body[data-page="episodes"] .ep-feature:nth-child(3) .ep-feature-icon {
+      background: rgba(241,139,213,.14);
+      color: var(--ep-pink);
+    }
+
+    body[data-page="episodes"] .ep-feature strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    body[data-page="episodes"] .ep-feature small {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted, #a9b4c5);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    body[data-page="episodes"] .ep-section {
+      margin-top: 28px;
+    }
+
+    body[data-page="episodes"] .ep-section-heading {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    body[data-page="episodes"] .ep-section-heading h2 {
+      margin: 0;
+      font-size: clamp(19px, 3vw, 24px);
+      letter-spacing: -.5px;
+    }
+
+    body[data-page="episodes"] .ep-section-label {
+      display: block;
+      margin-bottom: 5px;
+      color: var(--ep-blue);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+    }
+
+    body[data-page="episodes"] .ep-panel {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(17px, 3vw, 25px);
+      border: 1px solid var(--border, rgba(255,255,255,.13));
+      border-radius: 23px;
+      background: var(--surface, rgba(255,255,255,.055));
+      box-shadow: 0 13px 34px rgba(0,0,0,.09), inset 0 1px 0 rgba(255,255,255,.06);
+      backdrop-filter: blur(16px);
+    }
+
+    body[data-page="episodes"] .ep-panel::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 20px;
+      right: 20px;
+      height: 2px;
+      background: linear-gradient(90deg, var(--ep-blue), var(--ep-cyan), var(--ep-pink));
+      opacity: .8;
+    }
+
+    body[data-page="episodes"] .ep-form-intro {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+      margin-bottom: 20px;
+    }
+
+    body[data-page="episodes"] .ep-form-symbol {
+      width: 48px;
+      height: 48px;
+      flex: 0 0 48px;
+      display: grid;
+      place-items: center;
+      border-radius: 15px;
+      background: linear-gradient(145deg, #398ce9, #7969dd);
+      color: white;
+      font-size: 23px;
+      box-shadow: 0 9px 20px rgba(76,124,220,.25);
+    }
+
+    body[data-page="episodes"] .ep-form-intro h2 {
+      margin: 0 0 4px;
+      font-size: 17px;
+    }
+
+    body[data-page="episodes"] .ep-form-intro p {
+      margin: 0;
+      color: var(--muted, #a9b4c5);
+      font-size: 12px;
+    }
+
+    body[data-page="episodes"] #splitForm {
+      gap: 17px;
+    }
+
+    body[data-page="episodes"] #splitStory,
+    body[data-page="episodes"] #episodeSearch {
+      min-height: 49px;
+      border-radius: 14px;
+      border: 1px solid var(--border, rgba(255,255,255,.16));
+      background-color: var(--surface, rgba(255,255,255,.06));
+      padding: 12px 14px;
+      width: 100%;
+      max-width: 100%;
+    }
+
+    body[data-page="episodes"] .ep-rule-card {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px;
+      border: 1px solid rgba(54,217,208,.2);
+      border-radius: 16px;
+      background: linear-gradient(110deg, rgba(54,217,208,.09), rgba(85,166,255,.07));
+    }
+
+    body[data-page="episodes"] .ep-rule-card > span {
+      font-size: 22px;
+    }
+
+    body[data-page="episodes"] .ep-rule-card b {
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    body[data-page="episodes"] .ep-rule-card p {
+      margin: 0;
+      line-height: 1.6;
+    }
+
+    body[data-page="episodes"] #splitForm button[type="submit"] {
+      min-height: 51px;
+      width: 100%;
+      border: 0;
+      border-radius: 15px;
+      background: linear-gradient(100deg, #398fe9, #6d72e8 55%, #a66cda);
+      color: white;
+      font-weight: 850;
+      letter-spacing: .2px;
+      box-shadow: 0 10px 25px rgba(83,117,221,.25);
+      transition: transform .2s ease, filter .2s ease;
+    }
+
+    body[data-page="episodes"] #splitForm button[type="submit"]:active {
+      transform: scale(.985);
+      filter: brightness(1.1);
+    }
+
+    body[data-page="episodes"] .ep-preview-box,
+    body[data-page="episodes"] .ep-saved-box {
+      min-height: 80px;
+      padding: 16px;
+      border: 1px solid var(--border, rgba(255,255,255,.12));
+      border-radius: 19px;
+      background: var(--surface, rgba(255,255,255,.035));
+    }
+
+    body[data-page="episodes"] .ep-publish-note {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 15px;
+      margin-bottom: 17px;
+      border: 1px solid rgba(241,139,213,.2);
+      border-radius: 16px;
+      background: linear-gradient(110deg, rgba(241,139,213,.09), rgba(255,198,109,.06));
+    }
+
+    body[data-page="episodes"] .ep-publish-note .ep-note-icon {
+      font-size: 23px;
+    }
+
+    body[data-page="episodes"] .ep-publish-note p {
+      margin: 5px 0 0;
+      line-height: 1.6;
+    }
+
+    body[data-page="episodes"] .search-label {
+      display: block;
+      margin-bottom: 13px;
+      font-size: 13px;
+      font-weight: 750;
+    }
+
+    body[data-page="episodes"] #savedEpisodeCount {
+      border: 1px solid rgba(85,166,255,.22);
+      background: rgba(85,166,255,.12);
+      color: var(--ep-blue);
+      border-radius: 999px;
+      padding: 7px 12px;
+      white-space: nowrap;
+    }
+
+    body[data-page="episodes"] #savedEpisodeList .list-item {
+      border: 1px solid var(--border, rgba(255,255,255,.12));
+      border-radius: 18px;
+      background: var(--surface, rgba(255,255,255,.045));
+      box-shadow: 0 8px 22px rgba(0,0,0,.06);
+      padding: 17px;
+      margin-bottom: 12px;
+    }
+
+    body[data-page="episodes"] #savedEpisodeList .episode-number {
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(85,166,255,.12);
+      color: var(--ep-blue);
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    body[data-page="episodes"] .episode-content-preview {
+      line-height: 1.7;
+      opacity: .85;
+    }
+
+    body[data-page="episodes"] .item-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    body[data-page="episodes"] .item-actions button {
+      border-radius: 11px;
+    }
+
+    body[data-page="episodes"] #episodeReaderPanel {
+      border: 1px solid rgba(85,166,255,.25);
+      border-radius: 23px;
+      padding: 20px;
+      background: var(--surface, rgba(255,255,255,.06));
+      box-shadow: 0 16px 40px rgba(0,0,0,.12);
+    }
+
+    body[data-page="episodes"] .story-reading-text {
+      line-height: 1.9;
+      font-size: 16px;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 650px) {
+      body[data-page="episodes"] .page-content {
+        padding: 17px 13px 30px;
+      }
+
+      body[data-page="episodes"] .ep-hero {
+        grid-template-columns: 1fr;
+        min-height: unset;
+        border-radius: 23px;
+        padding: 24px 20px 14px;
+      }
+
+      body[data-page="episodes"] .ep-hero h1 {
+        font-size: 36px;
+      }
+
+      body[data-page="episodes"] .ep-art {
+        min-height: 125px;
+      }
+
+      body[data-page="episodes"] .ep-art-orbit {
+        width: 112px;
+        height: 112px;
+      }
+
+      body[data-page="episodes"] .ep-art-core {
+        width: 68px;
+        height: 82px;
+        font-size: 32px;
+      }
+
+      body[data-page="episodes"] .ep-art-tag {
+        right: 8%;
+        bottom: 2px;
+      }
+
+      body[data-page="episodes"] .ep-feature-strip {
+        gap: 8px;
+      }
+
+      body[data-page="episodes"] .ep-feature {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 11px;
+        border-radius: 15px;
+      }
+
+      body[data-page="episodes"] .ep-feature-icon {
+        width: 34px;
+        height: 34px;
+        flex-basis: 34px;
+        font-size: 17px;
+      }
+
+      body[data-page="episodes"] .ep-feature strong {
+        font-size: 12px;
+      }
+
+      body[data-page="episodes"] .ep-feature small {
+        font-size: 10px;
+      }
+
+      body[data-page="episodes"] .ep-section-heading {
+        align-items: flex-start;
+      }
+
+      body[data-page="episodes"] .ep-panel {
+        border-radius: 19px;
+      }
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      body[data-page="episodes"] .ep-hero {
+        animation: epReveal .65s ease both;
+      }
+
+      body[data-page="episodes"] .ep-feature {
+        animation: epReveal .6s ease both;
+      }
+
+      body[data-page="episodes"] .ep-feature:nth-child(2) {
+        animation-delay: .08s;
+      }
+
+      body[data-page="episodes"] .ep-feature:nth-child(3) {
+        animation-delay: .16s;
+      }
+
+      @keyframes epReveal {
+        from { opacity: 0; transform: translateY(12px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+    }
+  </style>
 </head>
 
 <body data-page="episodes">
@@ -34,25 +575,13 @@
 
     <nav class="main-nav" aria-label="Main navigation">
       <a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
-      <a class="nav-link" href="stories.html"><span>▤</span><b>Stories</b></a>
-      <a class="nav-link active" href="episodes.html"><span>▥</span><b>Episodes</b></a>
       <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-      <a class="nav-link" href="planner.html"><span>◷</span><b>Planner</b></a>
-      <a class="nav-link" href="hype.html"><span>↗</span><b>Hype</b></a>
+      <a class="nav-link" href="library.html"><span>📚</span><b>Library</b></a>
       <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
       <a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-      <a class="nav-link" href="channels.html"><span>◎</span><b>Channels</b></a>
-      <a class="nav-link" href="complaints.html"><span>⚑</span><b>Complaints</b></a>
-      <a class="nav-link" href="reviews.html"><span>★</span><b>Reviews</b></a>
-      <a class="nav-link" href="notifications.html"><span>♧</span><b>Alerts</b></a>
-      <a class="nav-link" href="backup.html"><span>▣</span><b>Backup</b></a>
-      <a class="nav-link" href="settings.html"><span>⚙</span><b>Settings</b></a>
     </nav>
 
     <div class="sidebar-bottom">
-      <a class="nav-link" href="index.html">
-        <span>↗</span><b>Welcome screen</b>
-      </a>
       <p class="small muted">Keep creating. Keep your stories safe.</p>
     </div>
 
@@ -81,96 +610,167 @@
 
     <main class="page-content page-enter">
 
-      <section class="page-intro">
-        <p class="eyebrow">SEASON TOOLKIT</p>
-        <h1>Episode <span>splitter</span></h1>
-
-        <p class="muted">
-          Split the complete saved story into 250–300-word episodes where possible.
-          Episodes are grouped into folders of up to 13 per season; overflow
-          continues into the next unused season. The app checks that no text
-          is lost before saving.
-        </p>
-      </section>
-
-      <section class="panel">
-
-        <form id="splitForm" class="form-grid">
-
-          <label class="full">
-            Choose a story
-            <select id="splitStory" required>
-              <option value="">Select a saved story…</option>
-            </select>
-          </label>
-
-          <div class="full panel">
-            <b>Automatic episode sizing</b>
-            <p class="small muted">
-              Target 250–300 words · maximum 13 episodes per season folder ·
-              overflow continues in the next unused season · 220 words/minute.
-            </p>
-          </div>
-
-          <div class="full">
-            <button class="button primary" type="submit">
-              Create episode preview
-            </button>
-          </div>
-
-        </form>
-
-      </section>
-
-      <section class="section-block">
-
-        <div class="section-heading">
-          <h2>Episode preview</h2>
-          <span class="pill">Review before saving</span>
-        </div>
-
-        <div id="episodePreview" class="episode-grid">
-          <div class="empty-state">
-            Choose a story to create a preview.
-          </div>
-        </div>
-
-      </section>
-
-      <section class="section-block">
-
-        <div class="section-heading">
-          <h2>Saved episodes</h2>
-          <span class="pill" id="savedEpisodeCount">0 episodes</span>
-        </div>
-
-        <div class="panel">
-          <b>📤 Ready to publish?</b>
-          <p class="small muted">
-            Use <b>Copy text</b> to copy the complete episode.
-            Use <b>Post / Share</b> to open Android's sharing menu where supported.
-            Choose WhatsApp, select your Channel, review the message and tap Send.
+      <section class="ep-hero">
+        <div class="ep-hero-copy">
+          <span class="ep-kicker">✦ YOUR STORY WORKSHOP</span>
+          <h1>Turn stories into <span>episodes.</span></h1>
+          <p>
+            Give every chapter its own moment. Split your complete season,
+            review every episode and keep your story text safe.
           </p>
         </div>
 
-        <label class="search-label">
-          Search episodes
-          <input id="episodeSearch" type="search"
-            placeholder="Search episode or season title…">
-        </label>
+        <div class="ep-art" aria-hidden="true">
+          <div class="ep-art-orbit">
+            <div class="ep-art-core">📖</div>
+          </div>
+          <span class="ep-art-tag">✦ EPISODE STUDIO</span>
+        </div>
+      </section>
 
-        <div id="savedEpisodeList" class="stack-list">
+      <section class="ep-feature-strip" aria-label="Episode features">
+        <div class="ep-feature">
+          <span class="ep-feature-icon">✂️</span>
+          <div>
+            <strong>Smart splitting</strong>
+            <small>250–300 words where possible</small>
+          </div>
+        </div>
+
+        <div class="ep-feature">
+          <span class="ep-feature-icon">🛡️</span>
+          <div>
+            <strong>Text protection</strong>
+            <small>Coverage checked before saving</small>
+          </div>
+        </div>
+
+        <div class="ep-feature">
+          <span class="ep-feature-icon">📂</span>
+          <div>
+            <strong>Season folders</strong>
+            <small>13 episodes per season folder</small>
+          </div>
+        </div>
+      </section>
+
+      <section class="ep-section">
+
+        <div class="ep-section-heading">
+          <div>
+            <span class="ep-section-label">01 / CREATE</span>
+            <h2>Build your episodes</h2>
+          </div>
+          <span class="pill">✦ Splitter</span>
+        </div>
+
+        <div class="ep-panel">
+
+          <div class="ep-form-intro">
+            <span class="ep-form-symbol">✂</span>
+            <div>
+              <h2>Season episode splitter</h2>
+              <p>Choose a saved story to begin.</p>
+            </div>
+          </div>
+
+          <form id="splitForm" class="form-grid">
+
+            <label class="full">
+              Choose a story
+              <select id="splitStory" required>
+                <option value="">Select a saved story…</option>
+              </select>
+            </label>
+
+            <div class="full ep-rule-card">
+              <span>💡</span>
+              <div>
+                <b>How the splitter works</b>
+                <p class="small muted">
+                  Target 250–300 words · maximum 13 episodes per season folder ·
+                  overflow continues in the next unused season · 220 words/minute.
+                </p>
+              </div>
+            </div>
+
+            <div class="full">
+              <button class="button primary" type="submit">
+                ✨ Create episode preview
+              </button>
+            </div>
+
+          </form>
+
+        </div>
+
+      </section>
+
+      <section class="ep-section">
+
+        <div class="ep-section-heading">
+          <div>
+            <span class="ep-section-label">02 / REVIEW</span>
+            <h2>Episode preview</h2>
+          </div>
+          <span class="pill">Review before saving</span>
+        </div>
+
+        <div id="episodePreview" class="episode-grid ep-preview-box">
           <div class="empty-state">
-            Your saved episodes will appear here.
+            📖 Choose a story to create a preview.
           </div>
         </div>
 
       </section>
 
-      <section class="section-block" id="episodeReaderPanel" hidden>
+      <section class="ep-section">
 
-        <div class="section-heading">
-          <h2 id="episodeReaderTitle">Episode reader</h2>
+        <div class="ep-section-heading">
+          <div>
+            <span class="ep-section-label">03 / YOUR COLLECTION</span>
+            <h2>Saved episodes</h2>
+          </div>
+          <span class="pill" id="savedEpisodeCount">0 episodes</span>
+        </div>
+
+        <div class="ep-saved-box">
+
+          <div class="ep-publish-note">
+            <span class="ep-note-icon">📤</span>
+            <div>
+              <b>Ready to publish?</b>
+              <p class="small muted">
+                Use <b>Copy text</b> to copy the complete episode.
+                Use <b>Post / Share</b> to open Android's sharing menu where supported.
+                Choose WhatsApp, select your Channel, review the message and tap Send.
+              </p>
+            </div>
+          </div>
+
+          <label class="search-label">
+            🔎 Search episodes
+            <input id="episodeSearch" type="search"
+              placeholder="Search episode or season title…">
+          </label>
+
+          <div id="savedEpisodeList" class="stack-list">
+            <div class="empty-state">
+              Your saved episodes will appear here.
+            </div>
+          </div>
+
+        </div>
+
+      </section>
+
+      <section class="ep-section" id="episodeReaderPanel" hidden>
+
+        <div class="ep-section-heading">
+          <div>
+            <span class="ep-section-label">READING SPACE</span>
+            <h2 id="episodeReaderTitle">Episode reader</h2>
+          </div>
           <button class="button ghost small-button"
             id="closeEpisodeReader" type="button">
             Close reader
@@ -195,17 +795,14 @@
 <div id="toastRegion" class="toast-region"
   aria-live="polite" aria-atomic="true"></div>
 
-<!-- Core application files -->
 <script src="./storage.js"></script>
 <script src="./themes.js"></script>
 <script src="./transitions.js"></script>
 <script src="./effects.js"></script>
 <script src="./notifications.js"></script>
 
-<!-- Episode engine -->
 <script src="./story-engine.js?v=folder-fix-3"></script>
 
-<!-- Application behavior -->
 <script src="./app.js"></script>
 <script src="./whatsapp-shell.js"></script>
 
