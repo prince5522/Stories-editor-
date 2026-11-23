@@ -576,4 +576,65 @@
     registerAndroidNotificationClicks
   );
 
+/* ---------- LIBRARY SIDEBAR UPDATE ---------- */
+(function () {
+  'use strict';
+
+  function updateLibrarySidebar() {
+    const nav = document.querySelector('.sidebar .main-nav');
+    if (!nav) return;
+
+    const links = Array.from(nav.querySelectorAll('a.nav-link'));
+
+    let libraryLink = links.find(link =>
+      link.querySelector('b')?.textContent.trim().toLowerCase() === 'library' ||
+      /(^|\/)library\.html$/i.test(link.getAttribute('href') || '')
+    );
+
+    links.forEach(link => {
+      const label = link.querySelector('b')?.textContent.trim().toLowerCase() || '';
+      const href = (link.getAttribute('href') || '').split('?')[0].split('#')[0];
+
+      if (label === 'library') {
+        if (link !== libraryLink) link.remove();
+        return;
+      }
+
+      if (
+        ['stories', 'episodes', 'planner', 'auto-splitter'].includes(label) ||
+        /(^|\/)(stories|episodes|planner)\.html$/i.test(href)
+      ) {
+        link.remove();
+      }
+    });
+
+    if (libraryLink && !libraryLink.isConnected) {
+      libraryLink = null;
+    }
+
+    if (!libraryLink) {
+      libraryLink = document.createElement('a');
+      libraryLink.className = 'nav-link';
+      libraryLink.innerHTML = '<span>▧</span><b>Library</b>';
+
+      const homeLink = nav.querySelector('a[href$="home.html"]');
+
+      if (homeLink) {
+        homeLink.insertAdjacentElement('afterend', libraryLink);
+      } else {
+        nav.prepend(libraryLink);
+      }
+    }
+
+    libraryLink.href = 'library.html';
+
+    const currentPage = location.pathname.split('/').pop();
+    libraryLink.classList.toggle('active', currentPage === 'library.html');
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', updateLibrarySidebar, { once: true });
+  } else {
+    updateLibrarySidebar();
+  }
 })();
