@@ -103,9 +103,7 @@
  border-radius:14px;
 }
 #storyForm input,
-#storyForm select{
- min-height:48px;
-}
+#storyForm select{min-height:48px}
 #storyForm textarea{
  min-height:150px;
  resize:vertical;
@@ -142,9 +140,7 @@
  border-radius:14px;
  line-height:1.55;
 }
-.story-library-section{
- margin-top:28px;
-}
+.story-library-section{margin-top:28px}
 .story-library-heading{
  display:flex;
  align-items:center;
@@ -160,14 +156,8 @@
  gap:8px;
  margin-bottom:17px;
 }
-#storySearch{
- min-height:48px;
- border-radius:15px;
-}
-#storyList{
- display:grid;
- gap:14px;
-}
+#storySearch{min-height:48px;border-radius:15px}
+#storyList{display:grid;gap:14px}
 #storyList .empty-state{
  padding:30px 18px;
  text-align:center;
@@ -202,6 +192,7 @@
  border:1px solid rgba(127,127,127,.12);
 }
 .app-footer{margin-top:30px}
+
 @media(max-width:560px){
  #storyForm{grid-template-columns:1fr}
  #storyForm .full{grid-column:auto}
@@ -386,6 +377,9 @@ Made for your stories
 <script src="./story-engine.js?v=uploaded-folders-1"></script>
 <script src="./app.js"></script>
 <script src="./whatsapp-shell.js"></script>
+
+<!-- Shared cloud backup and sync loader -->
+<script src="./cloud-system-loader.js"></script>
 
 </body>
 </html>
