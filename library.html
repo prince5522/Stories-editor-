@@ -537,15 +537,24 @@
 <div id="toastRegion" class="toast-region"
   aria-live="polite" aria-atomic="true"></div>
 
+<!-- Core storage and cloud connection -->
 <script src="./storage.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="./supabase-cloud.js"></script>
+
+<!-- App appearance and behavior -->
 <script src="./themes.js"></script>
 <script src="./transitions.js"></script>
 <script src="./effects.js"></script>
 <script src="./notifications.js"></script>
-<script src="./supabase-cloud.js"></script>
 <script src="./app.js"></script>
 <script src="./whatsapp-shell.js"></script>
+
+<!-- Library page logic -->
 <script src="./library.js"></script>
+
+<!-- Automatic cloud backup and sync -->
+<script src="./cloud-system-loader.js"></script>
 
 </body>
 </html>
