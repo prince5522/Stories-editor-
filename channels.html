@@ -4,46 +4,157 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<script src="./app-shell-behavior.js"></script>
 <meta name="theme-color" content="#101827">
-<meta name="description" content="Save channel links and open them from your studio.">
+<meta name="description" content="Manage your WhatsApp channels in Channel Studio.">
 <title>My Channels — Channel Studio</title>
+
 <link rel="manifest" href="./manifest.webmanifest">
 <link rel="stylesheet" href="./styles.css">
 <link rel="stylesheet" href="./animations.css">
 <link rel="stylesheet" href="./themes.css">
 <link rel="stylesheet" href="./whatsapp-shell.css">
+<script src="./app-shell-behavior.js"></script>
+
+<style>
+body[data-page="channels"]{
+ --channel-blue:#38bdf8;
+ --channel-cyan:#2dd4bf;
+ --channel-green:#34d399;
+}
+.channel-hero{
+ position:relative;overflow:hidden;
+ padding:30px 24px;border-radius:25px;margin-bottom:23px;
+ color:white;
+ background:
+ radial-gradient(circle at 90% 10%,rgba(45,212,191,.25),transparent 34%),
+ radial-gradient(circle at 5% 100%,rgba(56,189,248,.25),transparent 40%),
+ linear-gradient(130deg,#102c43,#123d4c 55%,#123d38);
+ border:1px solid rgba(103,232,249,.2);
+ box-shadow:0 20px 45px rgba(0,0,0,.18);
+}
+.channel-hero:after{
+ content:"◎";position:absolute;right:22px;bottom:-57px;
+ font-size:205px;line-height:1;color:rgba(255,255,255,.045);
+ pointer-events:none;
+}
+.channel-hero .eyebrow{color:#67e8f9;font-weight:900;letter-spacing:2px}
+.channel-hero h1{
+ color:#fff;font-size:clamp(2.1rem,6vw,3.2rem);
+ letter-spacing:-1.5px;position:relative;z-index:1;
+}
+.channel-hero h1 span{color:#5eead4}
+.channel-hero p{color:rgba(255,255,255,.75);position:relative;z-index:1;max-width:650px;line-height:1.7}
+.channel-panel{
+ position:relative;overflow:hidden;
+ border:1px solid var(--border,rgba(255,255,255,.13));
+ border-radius:22px;
+ background:linear-gradient(145deg,rgba(45,212,191,.07),rgba(56,189,248,.035));
+ box-shadow:0 14px 35px rgba(0,0,0,.08);
+}
+.channel-panel:before{
+ content:"";position:absolute;top:0;left:20px;right:20px;height:3px;
+ background:linear-gradient(90deg,#38bdf8,#2dd4bf,#34d399);
+}
+.channel-form-heading{
+ display:flex;align-items:center;gap:13px;margin-bottom:20px;
+}
+.channel-form-icon{
+ width:49px;height:49px;display:grid;place-items:center;
+ border-radius:16px;font-size:23px;color:#67e8f9;
+ background:linear-gradient(145deg,rgba(56,189,248,.2),rgba(45,212,191,.15));
+ border:1px solid rgba(45,212,191,.2);
+}
+#channelForm{
+ display:grid;grid-template-columns:1fr 1fr;gap:16px;
+}
+#channelForm label{
+ display:flex;flex-direction:column;gap:8px;
+ font-weight:700;font-size:.91rem;min-width:0;
+}
+#channelForm .full{grid-column:1/-1}
+#channelForm input,#channelForm select{
+ width:100%;min-width:0;min-height:49px;border-radius:14px;
+}
+#channelForm input:focus,#channelForm select:focus{
+ outline:none;border-color:#2dd4bf;
+ box-shadow:0 0 0 3px rgba(45,212,191,.14);
+}
+#channelForm select{
+ appearance:none;-webkit-appearance:none;padding-right:38px;
+ background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+ background-repeat:no-repeat;background-position:right 13px center;
+}
+#channelForm select option{background:#152238;color:white}
+#channelForm button{min-height:48px;border-radius:14px}
+.channel-safety{
+ display:flex;gap:12px;align-items:flex-start;
+ padding:15px;margin-top:18px;border-radius:15px;
+ border:1px solid rgba(45,212,191,.17);
+ background:rgba(45,212,191,.055);
+}
+.channel-safety-icon{font-size:22px}
+.channel-safety p{margin:4px 0 0;line-height:1.6}
+.channel-list-heading{
+ display:flex;justify-content:space-between;align-items:center;
+ gap:12px;flex-wrap:wrap;margin-bottom:16px;
+}
+.channel-list-heading h2{margin:0}
+#channelList{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px;
+}
+#channelList:empty:after{
+ content:"Your saved channels will appear here.";
+ display:block;grid-column:1/-1;padding:28px;text-align:center;
+ border:1px dashed var(--border,rgba(127,127,127,.35));
+ border-radius:18px;color:var(--muted,#aab5c6);
+}
+#channelList>*{
+ min-width:0;border-radius:19px;
+ border:1px solid var(--border,rgba(255,255,255,.13));
+ background:linear-gradient(145deg,rgba(45,212,191,.07),rgba(255,255,255,.025));
+ box-shadow:0 10px 25px rgba(0,0,0,.07);
+ overflow-wrap:anywhere;
+}
+#channelList a{overflow-wrap:anywhere;word-break:break-word}
+#channelList button{border-radius:12px}
+.channel-section{margin-top:28px}
+@media(max-width:620px){
+ .channel-hero{padding:25px 19px}
+ #channelForm{grid-template-columns:1fr}
+ #channelForm .full{grid-column:auto}
+ #channelList{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:no-preference){
+ #channelList>*{transition:transform .2s ease,border-color .2s ease}
+ #channelList>*:hover{transform:translateY(-3px);border-color:rgba(45,212,191,.4)}
+}
+</style>
 </head>
+
 <body data-page="channels">
 <div class="app-layout">
+
 <aside class="sidebar">
 <a class="brand" href="home.html">
 <span class="brand-mark small-mark">CS</span>
 <span>Channel<span class="brand-accent">Studio</span><small>YOUR CREATOR SPACE</small></span>
 </a>
+
 <nav class="main-nav" aria-label="Main navigation">
 <a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
-<a class="nav-link" href="stories.html"><span>▤</span><b>Stories</b></a>
-<a class="nav-link" href="episodes.html"><span>▥</span><b>Episodes</b></a>
 <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-<a class="nav-link" href="planner.html"><span>◷</span><b>Planner</b></a>
-<a class="nav-link" href="hype.html"><span>↗</span><b>Hype</b></a>
+<a class="nav-link" href="library.html"><span>▤</span><b>Library</b></a>
 <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
 <a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-<a class="nav-link active" href="channels.html"><span>◎</span><b>Channels</b></a>
-<a class="nav-link" href="complaints.html"><span>⚑</span><b>Complaints</b></a>
-<a class="nav-link" href="reviews.html"><span>★</span><b>Reviews</b></a>
-<a class="nav-link" href="notifications.html"><span>♧</span><b>Alerts</b></a>
-<a class="nav-link" href="backup.html"><span>▣</span><b>Backup</b></a>
-<a class="nav-link" href="settings.html"><span>⚙</span><b>Settings</b></a>
 </nav>
+
 <div class="sidebar-bottom">
-<a class="nav-link" href="index.html"><span>↗</span><b>Welcome screen</b></a>
-<p class="small muted">Keep creating. Keep your stories safe.</p>
+<p class="small muted">Your stories. Your channels. Your space.</p>
 </div>
 </aside>
 
 <div class="main-column">
+
 <header class="topbar">
 <button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
 <div>
@@ -57,44 +168,76 @@
 </header>
 
 <main class="page-content page-enter">
-<section class="page-intro">
-<p class="eyebrow">YOUR DESTINATIONS</p>
-<h1>My <span>channels</span></h1>
-<p class="muted">Save your own channel and other channels you promote. WhatsApp opens separately; saving a link does not grant automatic publishing access.</p>
+
+<section class="page-intro channel-hero">
+<p class="eyebrow">YOUR PUBLISHING DESTINATIONS</p>
+<h1>My <span>channels.</span></h1>
+<p>Keep your WhatsApp Channel links organised. Save your own channel and partner channels so they're ready when it's time to publish.</p>
 </section>
 
-<section class="panel">
+<section class="panel channel-panel">
+<div class="channel-form-heading">
+<div class="channel-form-icon">◎</div>
+<div>
+<p class="eyebrow">ADD A DESTINATION</p>
+<h2>Save a WhatsApp channel</h2>
+<p class="small muted">Add a channel link to your collection.</p>
+</div>
+</div>
+
 <form id="channelForm" class="form-grid">
-<label>Channel name
+<label>
+Channel name
 <input id="channelName" required maxlength="100" placeholder="My story channel">
 </label>
-<label>Channel role
+
+<label>
+Channel role
 <select id="channelRole">
 <option value="my">My channel</option>
 <option value="source">Source / partner channel</option>
 <option value="other">Other channel</option>
 </select>
 </label>
-<label class="full">Channel link
+
+<label class="full">
+Channel link
 <input id="channelUrl" type="url" required placeholder="https://whatsapp.com/channel/…">
 </label>
+
 <div class="full">
-<button class="button primary" type="submit">Save channel</button>
+<button class="button primary" type="submit">＋ Save channel</button>
 </div>
 </form>
-<div class="notice info">For safety, this app never asks for your WhatsApp password or verification code. Account linking alone does not enable automatic Channel posting.</div>
+
+<div class="channel-safety notice info">
+<span class="channel-safety-icon">🛡️</span>
+<div>
+<strong>Your account stays protected</strong>
+<p class="small muted">Channel Studio never asks for your WhatsApp password or verification code. Saving a link does not grant automatic publishing access. You still review and publish posts yourself in WhatsApp.</p>
+</div>
+</div>
 </section>
 
-<section class="section-block">
-<div class="section-heading"><h2>Saved channels</h2></div>
+<section class="section-block channel-section">
+<div class="channel-list-heading">
+<div>
+<p class="eyebrow">YOUR COLLECTION</p>
+<h2>Saved channels</h2>
+</div>
+<span class="pill">My destinations</span>
+</div>
+
 <div id="channelList" class="channel-grid"></div>
 </section>
+
 </main>
 
 <footer class="app-footer">
-Made for your stories <span>✦</span>
+Made for your stories
 <span class="muted">Local-first • Your content stays yours</span>
 </footer>
+
 </div>
 </div>
 
@@ -107,5 +250,6 @@ Made for your stories <span>✦</span>
 <script src="./notifications.js"></script>
 <script src="./app.js"></script>
 <script src="./whatsapp-shell.js"></script>
+
 </body>
 </html>
