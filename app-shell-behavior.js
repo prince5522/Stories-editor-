@@ -3,6 +3,7 @@
    STORIES EDITOR — APP SHELL BEHAVIOUR
    Android safe area
    Shared sidebar navigation
+   Library sidebar update
    Planner notification routing
    Global wallpaper restoration
 ===================================================== */
@@ -38,16 +39,10 @@
       'native-android-shell'
     );
 
-    if (
-      !document.getElementById(
-        'android-status-bar-background'
-      )
-    ) {
-      const statusBackground =
-        document.createElement('div');
+    if (!document.getElementById('android-status-bar-background')) {
+      const statusBackground = document.createElement('div');
 
-      statusBackground.id =
-        'android-status-bar-background';
+      statusBackground.id = 'android-status-bar-background';
 
       Object.assign(statusBackground.style, {
         position: 'fixed',
@@ -63,14 +58,11 @@
       document.body.appendChild(statusBackground);
     }
 
-    if (
-      document.getElementById('android-safe-area-fix')
-    ) {
+    if (document.getElementById('android-safe-area-fix')) {
       return;
     }
 
     const style = document.createElement('style');
-
     style.id = 'android-safe-area-fix';
 
     style.textContent = `
@@ -84,6 +76,96 @@
     `;
 
     document.head.appendChild(style);
+  }
+
+  /* ---------- LIBRARY SIDEBAR ---------- */
+
+  function updateLibrarySidebar() {
+    const nav = document.querySelector('.sidebar .main-nav');
+
+    if (!nav) return;
+
+    const links = Array.from(
+      nav.querySelectorAll('a.nav-link')
+    );
+
+    let libraryLink = links.find(link => {
+      const label = link.querySelector('b')
+        ?.textContent.trim().toLowerCase();
+
+      const href = link.getAttribute('href') || '';
+
+      return (
+        label === 'library' ||
+        /(^|\/)library\.html$/i.test(href)
+      );
+    });
+
+    links.forEach(link => {
+      const label = link.querySelector('b')
+        ?.textContent.trim().toLowerCase() || '';
+
+      const href = (link.getAttribute('href') || '')
+        .split('?')[0]
+        .split('#')[0];
+
+      if (label === 'library') {
+        if (link !== libraryLink) {
+          link.remove();
+        }
+        return;
+      }
+
+      const oldNavigationItem = [
+        'stories',
+        'episodes',
+        'planner',
+        'auto-splitter'
+      ].includes(label);
+
+      const oldNavigationPage =
+        /(^|\/)(stories|episodes|planner)\.html$/i.test(href);
+
+      if (oldNavigationItem || oldNavigationPage) {
+        link.remove();
+      }
+    });
+
+    if (libraryLink && !libraryLink.isConnected) {
+      libraryLink = null;
+    }
+
+    if (!libraryLink) {
+      libraryLink = document.createElement('a');
+
+      libraryLink.className = 'nav-link';
+      libraryLink.innerHTML =
+        '<span>▧</span><b>Library</b>';
+
+      const homeLink = nav.querySelector(
+        'a[href$="home.html"]'
+      );
+
+      if (homeLink) {
+        homeLink.insertAdjacentElement(
+          'afterend',
+          libraryLink
+        );
+      } else {
+        nav.prepend(libraryLink);
+      }
+    }
+
+    libraryLink.href = 'library.html';
+
+    const currentPage = location.pathname
+      .split('/')
+      .pop();
+
+    libraryLink.classList.toggle(
+      'active',
+      currentPage === 'library.html'
+    );
   }
 
   /* ---------- SHARED SIDEBAR NAVIGATION ---------- */
@@ -117,39 +199,32 @@
       'false'
     );
 
-    menuToggle.addEventListener(
-      'click',
-      function (event) {
-        event.preventDefault();
-        event.stopPropagation();
+    menuToggle.addEventListener('click', function (event) {
+      event.preventDefault();
+      event.stopPropagation();
 
-        const isOpen =
-          sidebar.classList.toggle('open');
+      const isOpen = sidebar.classList.toggle('open');
+
+      menuToggle.setAttribute(
+        'aria-expanded',
+        isOpen ? 'true' : 'false'
+      );
+    });
+
+    document.addEventListener('click', function (event) {
+      if (
+        sidebar.classList.contains('open') &&
+        !sidebar.contains(event.target) &&
+        !menuToggle.contains(event.target)
+      ) {
+        sidebar.classList.remove('open');
 
         menuToggle.setAttribute(
           'aria-expanded',
-          isOpen ? 'true' : 'false'
+          'false'
         );
       }
-    );
-
-    document.addEventListener(
-      'click',
-      function (event) {
-        if (
-          sidebar.classList.contains('open') &&
-          !sidebar.contains(event.target) &&
-          !menuToggle.contains(event.target)
-        ) {
-          sidebar.classList.remove('open');
-
-          menuToggle.setAttribute(
-            'aria-expanded',
-            'false'
-          );
-        }
-      }
-    );
+    });
 
     console.info(
       'Stories Editor: Sidebar navigation initialized.'
@@ -206,7 +281,6 @@
 
   function handlePlannerNotificationOpened(event) {
     const slotName = event?.detail?.slot || '';
-
     revealPlannerSlot(slotName);
   }
 
@@ -330,13 +404,12 @@
     }
 
     try {
-      notificationRegistrationPromise =
-        Promise.resolve(
-          notifications.addListener(
-            'localNotificationActionPerformed',
-            openPlannerFromNotification
-          )
-        );
+      notificationRegistrationPromise = Promise.resolve(
+        notifications.addListener(
+          'localNotificationActionPerformed',
+          openPlannerFromNotification
+        )
+      );
 
       notificationRegistrationPromise
         .then(function () {
@@ -397,7 +470,6 @@
 
     if (!layer) {
       layer = document.createElement('div');
-
       layer.id = 'studioGlobalWallpaper';
 
       Object.assign(layer.style, {
@@ -420,7 +492,6 @@
     }
 
     const imageUrl = URL.createObjectURL(blob);
-
     layer.dataset.objectUrl = imageUrl;
 
     let brightness = 75;
@@ -534,6 +605,7 @@
 
   function start() {
     setupSidebarNavigation();
+    updateLibrarySidebar();
     applyAndroidSafeArea();
     registerAndroidNotificationClicks();
     loadGlobalWallpaper();
@@ -576,65 +648,4 @@
     registerAndroidNotificationClicks
   );
 
-/* ---------- LIBRARY SIDEBAR UPDATE ---------- */
-(function () {
-  'use strict';
-
-  function updateLibrarySidebar() {
-    const nav = document.querySelector('.sidebar .main-nav');
-    if (!nav) return;
-
-    const links = Array.from(nav.querySelectorAll('a.nav-link'));
-
-    let libraryLink = links.find(link =>
-      link.querySelector('b')?.textContent.trim().toLowerCase() === 'library' ||
-      /(^|\/)library\.html$/i.test(link.getAttribute('href') || '')
-    );
-
-    links.forEach(link => {
-      const label = link.querySelector('b')?.textContent.trim().toLowerCase() || '';
-      const href = (link.getAttribute('href') || '').split('?')[0].split('#')[0];
-
-      if (label === 'library') {
-        if (link !== libraryLink) link.remove();
-        return;
-      }
-
-      if (
-        ['stories', 'episodes', 'planner', 'auto-splitter'].includes(label) ||
-        /(^|\/)(stories|episodes|planner)\.html$/i.test(href)
-      ) {
-        link.remove();
-      }
-    });
-
-    if (libraryLink && !libraryLink.isConnected) {
-      libraryLink = null;
-    }
-
-    if (!libraryLink) {
-      libraryLink = document.createElement('a');
-      libraryLink.className = 'nav-link';
-      libraryLink.innerHTML = '<span>▧</span><b>Library</b>';
-
-      const homeLink = nav.querySelector('a[href$="home.html"]');
-
-      if (homeLink) {
-        homeLink.insertAdjacentElement('afterend', libraryLink);
-      } else {
-        nav.prepend(libraryLink);
-      }
-    }
-
-    libraryLink.href = 'library.html';
-
-    const currentPage = location.pathname.split('/').pop();
-    libraryLink.classList.toggle('active', currentPage === 'library.html');
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', updateLibrarySidebar, { once: true });
-  } else {
-    updateLibrarySidebar();
-  }
 })();
