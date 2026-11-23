@@ -15,65 +15,281 @@
 <link rel="stylesheet" href="whatsapp-shell.css">
 
 <style>
-.planner-intro{margin-bottom:22px}
-.planner-advert-grid{display:grid;grid-template-columns:1fr;gap:14px}
-.planner-slots{display:grid;grid-template-columns:1fr;gap:18px}
-.planner-slot{overflow:hidden}
-.planner-slot-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px}
-.planner-slot-head h2{margin:0}
-.planner-slot-icon{font-size:1.8rem}
-.planner-fields{display:grid;grid-template-columns:1fr 1fr;gap:13px}
-.planner-fields label{display:flex;flex-direction:column;gap:7px}
-.planner-fields .full{grid-column:1/-1}
-.planner-fields input,.planner-fields select,.planner-advert-grid textarea{width:100%;min-width:0}
-.planner-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:16px}
-.planner-note{margin-top:12px}
-.planner-slot-status{margin-top:12px;padding:12px;border-radius:12px;background:var(--surface-2,rgba(127,127,127,.10))}
-.planner-empty{padding:14px;border:1px dashed var(--border-color,rgba(127,127,127,.35));border-radius:12px}
-#taskMediaPreview img,#taskMediaPreview video{display:block;width:100%;max-height:230px;object-fit:contain;border-radius:12px;margin-top:10px}
-
-/* PLANNER FOLDER SYSTEM */
-.planner-folder{
-  border:1px solid var(--border-color,rgba(127,127,127,.25));
-  border-radius:18px;
-  overflow:hidden;
-  background:var(--surface,rgba(127,127,127,.04));
-  margin-bottom:20px;
+:root{
+  --planner-blue:#38bdf8;
+  --planner-cyan:#22d3ee;
+  --planner-indigo:#6366f1;
+  --planner-glass:rgba(255,255,255,.065);
+  --planner-border:rgba(255,255,255,.13);
 }
+
+.planner-intro{
+  position:relative;
+  overflow:hidden;
+  padding:30px 24px;
+  border-radius:25px;
+  background:
+    radial-gradient(circle at 90% 10%,rgba(34,211,238,.25),transparent 35%),
+    radial-gradient(circle at 5% 100%,rgba(99,102,241,.25),transparent 38%),
+    linear-gradient(130deg,#101b35,#142b49 55%,#102d43);
+  border:1px solid rgba(120,200,255,.2);
+  box-shadow:0 18px 45px rgba(0,0,0,.18);
+  margin-bottom:24px;
+}
+
+.planner-intro:after{
+  content:"◷";
+  position:absolute;
+  right:22px;
+  bottom:-42px;
+  font-size:180px;
+  line-height:1;
+  color:rgba(255,255,255,.045);
+  pointer-events:none;
+}
+
+.planner-intro h1{
+  color:#fff;
+  font-size:clamp(2rem,6vw,3.2rem);
+  letter-spacing:-1.5px;
+  position:relative;
+  z-index:1;
+}
+
+.planner-intro h1 span{color:#67e8f9}
+.planner-intro p{position:relative;z-index:1}
+.planner-intro .muted{color:rgba(255,255,255,.72)}
+
+.planner-intro .eyebrow{
+  color:#67e8f9;
+  font-weight:800;
+  letter-spacing:2px;
+}
+
+.planner-advert-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+}
+
+.planner-slots{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:18px;
+}
+
+.planner-slot{
+  position:relative;
+  overflow:hidden;
+  border-radius:21px;
+  border:1px solid var(--planner-border);
+  background:
+    linear-gradient(145deg,rgba(255,255,255,.075),rgba(255,255,255,.018));
+  box-shadow:0 12px 28px rgba(0,0,0,.10);
+  transition:transform .25s ease,border-color .25s ease,box-shadow .25s ease;
+}
+
+.planner-slot:before{
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:3px;
+  background:linear-gradient(90deg,var(--planner-blue),var(--planner-cyan),var(--planner-indigo));
+}
+
+.planner-slot:hover{
+  transform:translateY(-3px);
+  border-color:rgba(56,189,248,.4);
+  box-shadow:0 18px 35px rgba(0,0,0,.16);
+}
+
+.planner-slot-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:19px;
+}
+
+.planner-slot-head h2{margin:0;font-size:1.3rem}
+.planner-slot-icon{font-size:1.8rem}
+
+.planner-fields{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:15px;
+}
+
+.planner-fields label{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  font-weight:650;
+  font-size:.9rem;
+}
+
+.planner-fields .full{grid-column:1/-1}
+
+.planner-fields input,
+.planner-fields select,
+.planner-advert-grid textarea{
+  width:100%;
+  min-width:0;
+}
+
+.planner-fields input,
+.planner-fields select,
+#taskMediaSelect{
+  min-height:48px;
+  border-radius:14px;
+}
+
+.planner-fields select,
+#taskMediaSelect{
+  appearance:none;
+  -webkit-appearance:none;
+  padding:12px 42px 12px 14px;
+  color:var(--text-color,inherit);
+  border:1px solid rgba(255,255,255,.2);
+  background-color:rgba(255,255,255,.07);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 14px center;
+  background-size:16px;
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.1);
+  transition:.2s ease;
+}
+
+.planner-fields select:focus,
+#taskMediaSelect:focus,
+.planner-fields input:focus,
+.planner-advert-grid textarea:focus{
+  outline:none;
+  border-color:var(--planner-blue);
+  box-shadow:0 0 0 3px rgba(56,189,248,.15);
+}
+
+.planner-fields select option,
+#taskMediaSelect option{
+  background:#152238;
+  color:#fff;
+}
+
+.planner-advert-grid textarea{
+  border-radius:16px;
+  border:1px solid var(--planner-border);
+  background:rgba(255,255,255,.045);
+  padding:14px;
+  resize:vertical;
+  backdrop-filter:blur(14px);
+}
+
+.planner-actions{
+  display:flex;
+  flex-wrap:wrap;
+  align-items:center;
+  gap:12px;
+  margin-top:18px;
+}
+
+.planner-actions .button{
+  border-radius:14px;
+  min-height:46px;
+  box-shadow:0 7px 18px rgba(30,130,220,.14);
+}
+
+.planner-note{margin-top:12px}
+
+.planner-slot-status{
+  margin-top:15px;
+  padding:13px 15px;
+  border-radius:14px;
+  background:rgba(56,189,248,.07);
+  border:1px solid rgba(56,189,248,.13);
+  line-height:1.5;
+}
+
+.planner-empty{
+  padding:15px;
+  border:1px dashed var(--border-color,rgba(127,127,127,.35));
+  border-radius:14px;
+}
+
+#taskMediaPreview img,
+#taskMediaPreview video{
+  display:block;
+  width:100%;
+  max-height:230px;
+  object-fit:contain;
+  border-radius:14px;
+  margin-top:12px;
+}
+
+.planner-folder{
+  border:1px solid var(--planner-border);
+  border-radius:21px;
+  overflow:hidden;
+  background:var(--planner-glass);
+  margin-bottom:20px;
+  box-shadow:0 12px 30px rgba(0,0,0,.08);
+}
+
 .planner-folder-summary{
   display:flex;
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  padding:17px;
+  padding:19px;
   cursor:pointer;
   list-style:none;
   user-select:none;
+  background:linear-gradient(110deg,rgba(56,189,248,.10),rgba(99,102,241,.06));
 }
+
 .planner-folder-summary::-webkit-details-marker{display:none}
 .planner-folder-summary:after{
   content:"＋";
-  font-size:1.2rem;
-  font-weight:700;
+  font-size:1.25rem;
+  font-weight:800;
   opacity:.75;
 }
+
 .planner-folder[open]>.planner-folder-summary:after{content:"−"}
+
 .planner-folder-title{
   display:flex;
   align-items:center;
   gap:10px;
-  font-weight:750;
+  font-weight:800;
 }
-.planner-folder-content{padding:0 16px 17px}
-.planner-folder-content>.planner-slots{padding-top:4px}
+
+.planner-folder-content{padding:0 17px 18px}
+.planner-folder-content>.planner-slots{padding-top:5px}
 .planner-folder-hint{font-size:.82rem;opacity:.7;margin:5px 0 0}
-.planner-progress,.planner-history{backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px)}
-#plannerProgressCards{display:grid;grid-template-columns:1fr;gap:12px}
-.planner-progress-queue{
-  border:1px solid var(--border-color,rgba(127,127,127,.22));
-  border-radius:14px;
-  overflow:hidden;
+
+.planner-progress,
+.planner-history{
+  backdrop-filter:blur(16px);
+  -webkit-backdrop-filter:blur(16px);
 }
+
+#plannerProgressCards{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+}
+
+.planner-progress-queue{
+  border:1px solid var(--planner-border);
+  border-radius:16px;
+  overflow:hidden;
+  background:rgba(255,255,255,.035);
+}
+
 .planner-progress-queue>summary{
   cursor:pointer;
   list-style:none;
@@ -81,117 +297,78 @@
   align-items:center;
   justify-content:space-between;
   gap:10px;
-  padding:14px;
-  font-weight:700;
+  padding:15px;
+  font-weight:750;
 }
+
 .planner-progress-queue>summary::-webkit-details-marker{display:none}
 .planner-progress-queue>summary:after{content:"＋";opacity:.7}
 .planner-progress-queue[open]>summary:after{content:"−"}
-.planner-progress-body{padding:0 14px 14px}
+.planner-progress-body{padding:0 15px 15px}
 #plannerHistoryList{display:grid;gap:10px}
 
-.planner-fields select,#taskMediaSelect{
-  appearance:none;
-  -webkit-appearance:none;
-  width:100%;
-  min-height:48px;
-  padding:12px 42px 12px 14px;
-  color:var(--text-color,inherit);
-  background:
-    linear-gradient(135deg,rgba(255,255,255,.19),rgba(255,255,255,.045) 55%,rgba(255,255,255,.12));
-  border:1px solid rgba(255,255,255,.30);
-  border-radius:15px;
-  outline:none;
-  backdrop-filter:blur(18px) saturate(165%);
-  -webkit-backdrop-filter:blur(18px) saturate(165%);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.24),inset 0 -1px 0 rgba(255,255,255,.05),0 5px 18px rgba(0,0,0,.07);
-  transition:border-color .2s ease,box-shadow .2s ease,transform .2s ease;
-  background-image:
-    linear-gradient(135deg,rgba(255,255,255,.19),rgba(255,255,255,.045) 55%,rgba(255,255,255,.12)),
-    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;
-  background-position:center,right 14px center;
-  background-size:auto,16px;
-}
-.planner-fields select:focus,#taskMediaSelect:focus{
-  border-color:rgba(100,190,255,.85);
-  box-shadow:0 0 0 3px rgba(70,160,255,.16),inset 0 1px 0 rgba(255,255,255,.28),0 8px 24px rgba(0,0,0,.10);
-  transform:translateY(-1px);
-}
-.planner-fields select option,#taskMediaSelect option{background:#152238;color:#fff}
-.planner-fields input{
-  border-radius:14px;
-  backdrop-filter:blur(14px);
-  -webkit-backdrop-filter:blur(14px);
-}
-.planner-fields input:focus,.planner-advert-grid textarea:focus{
-  border-color:rgba(100,190,255,.8);
-  box-shadow:0 0 0 3px rgba(70,160,255,.15);
-}
-.planner-advert-grid textarea{
-  border-radius:15px;
-  background:linear-gradient(135deg,rgba(255,255,255,.13),rgba(255,255,255,.035));
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  border:1px solid rgba(255,255,255,.22);
-}
-.planner-slot .planner-fields label{position:relative}
-
-/* ANDROID EXACT REMINDER PANEL */
 #androidAlarmPermissionPanel[hidden]{display:none!important}
+
 #androidAlarmPermissionPanel{
   margin-bottom:20px;
-  border:1px solid var(--border-color,rgba(127,127,127,.25));
+  border:1px solid rgba(56,189,248,.25);
+  border-radius:19px;
+  background:linear-gradient(130deg,rgba(56,189,248,.09),rgba(99,102,241,.07));
 }
+
 #exactAlarmPermissionStatus{margin-top:12px}
 
 @media(prefers-reduced-motion:no-preference){
-  .planner-fields select:hover,#taskMediaSelect:hover{border-color:rgba(255,255,255,.48)}
+  .planner-fields select:hover,
+  #taskMediaSelect:hover{
+    border-color:rgba(56,189,248,.55);
+  }
 }
+
 @media(min-width:850px){
   .planner-slots{grid-template-columns:repeat(2,minmax(0,1fr))}
   .planner-advert-grid{grid-template-columns:1fr 1fr}
 }
+
 @media(max-width:520px){
   .planner-fields{grid-template-columns:1fr}
   .planner-fields .full{grid-column:auto}
   .planner-slot-head{align-items:flex-start}
-  .planner-folder-summary{padding:14px}
+  .planner-folder-summary{padding:15px}
   .planner-folder-content{padding:0 11px 13px}
+  .planner-intro{padding:25px 19px}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .planner-slot{transition:none}
 }
 </style>
 </head>
 
 <body data-page="planner">
 <div class="app-layout">
+
 <aside class="sidebar">
 <a class="brand" href="home.html">
 <span class="brand-mark small-mark">CS</span>
 <span>Channel<span class="brand-accent">Studio</span><small>YOUR CREATOR SPACE</small></span>
 </a>
+
 <nav class="main-nav" aria-label="Main navigation">
 <a class="nav-link" href="home.html"><span>⌂</span><b>Home</b></a>
-<a class="nav-link" href="stories.html"><span>▤</span><b>Stories</b></a>
-<a class="nav-link" href="episodes.html"><span>▥</span><b>Episodes</b></a>
 <a class="nav-link" href="ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-<a class="nav-link active" href="planner.html"><span>◷</span><b>Planner</b></a>
-<a class="nav-link" href="hype.html"><span>↗</span><b>Hype</b></a>
+<a class="nav-link" href="library.html"><span>▤</span><b>Library</b></a>
 <a class="nav-link" href="media.html"><span>▣</span><b>Media Library</b></a>
 <a class="nav-link" href="docs.html"><span>📄</span><b>Document Reader</b></a>
-<a class="nav-link" href="channels.html"><span>◎</span><b>Channels</b></a>
-<a class="nav-link" href="complaints.html"><span>⚑</span><b>Complaints</b></a>
-<a class="nav-link" href="reviews.html"><span>★</span><b>Reviews</b></a>
-<a class="nav-link" href="notifications.html"><span>♧</span><b>Alerts</b></a>
-<a class="nav-link" href="backup.html"><span>▣</span><b>Backup</b></a>
-<a class="nav-link" href="settings.html"><span>⚙</span><b>Settings</b></a>
 </nav>
+
 <div class="sidebar-bottom">
-<a class="nav-link" href="index.html"><span>↗</span><b>Welcome screen</b></a>
 <p class="small muted">Keep creating. Keep your stories safe.</p>
 </div>
 </aside>
 
 <div class="main-column">
+
 <header class="topbar">
 <button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
 <div>
@@ -205,6 +382,7 @@
 </header>
 
 <main class="page-content page-enter">
+
 <section class="page-intro planner-intro">
 <p class="eyebrow">YOUR POSTING ROUTINE</p>
 <h1>Story <span>planner</span></h1>
@@ -231,10 +409,12 @@ Enable exact reminders
 <h2>📢 Advertisement before every episode</h2>
 </div>
 </div>
+
 <div class="planner-advert-grid">
 <label class="full">Advertisement text
 <textarea id="plannerAdvertText" rows="5" maxlength="5000" placeholder="Write the advertisement that should be posted before each episode..."></textarea>
 </label>
+
 <div>
 <label for="taskMediaSelect">Advertisement poster from Media Library</label>
 <select id="taskMediaSelect">
@@ -243,12 +423,14 @@ Enable exact reminders
 <div id="taskMediaPreview" hidden></div>
 <p class="small muted">Choose an existing image or video. You will attach and publish it manually in WhatsApp.</p>
 </div>
+
 <div class="planner-slot-status">
 <strong>Posting sequence</strong>
 <p class="small muted">Advertisement first → return to Story Studio → episode next → confirm after publishing.</p>
 <p class="small muted">The same advertisement text and selected poster are used for all three queues.</p>
 </div>
 </div>
+
 <div class="planner-actions">
 <button type="button" class="button primary" id="savePlannerSettings">Save advertisement settings</button>
 <span class="small muted" id="plannerSaveStatus" aria-live="polite"></span>
@@ -378,15 +560,15 @@ Enable exact reminders
 <p class="small muted">Loading your saved stories, episodes and channels...</p>
 </div>
 </section>
+
 </main>
 
-<footer class="app-footer">Made for your stories <span>✦</span> <span class="muted">Local-first • Your content stays yours</span></footer>
+<footer class="app-footer">Made for your stories <span class="muted">Local-first • Your content stays yours</span></footer>
 </div>
 </div>
 
 <div id="toastRegion" class="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-<!-- All project files are stored in the repository root. -->
 <script src="storage.js"></script>
 <script src="themes.js"></script>
 <script src="transitions.js"></script>
