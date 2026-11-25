@@ -1,11 +1,12 @@
 
 /* =====================================================
    STORIES EDITOR — APP SHELL BEHAVIOUR
-   Android safe area
-   Shared sidebar navigation
-   Library sidebar update
-   Planner notification routing
-   Global wallpaper restoration
+   Version 2.0
+   - Theme-aware Android safe area
+   - Shared sidebar navigation
+   - Library sidebar update
+   - Planner notification routing
+   - Global wallpaper restoration
 ===================================================== */
 
 (function () {
@@ -27,21 +28,74 @@
 
   /* ---------- ANDROID SAFE AREA ---------- */
 
-  function applyAndroidSafeArea() {
-    if (
-      !window.Capacitor?.isNativePlatform?.() ||
-      window.Capacitor?.getPlatform?.() !== 'android'
-    ) {
-      return;
+  function isAndroidApp() {
+    return (
+      window.Capacitor?.isNativePlatform?.() === true &&
+      window.Capacitor?.getPlatform?.() === 'android'
+    );
+  }
+
+  function getCurrentThemeBackground() {
+    try {
+      const body = document.body;
+
+      if (body) {
+        const value = getComputedStyle(body)
+          .getPropertyValue('--bg')
+          .trim();
+
+        if (value) return value;
+      }
+
+      const rootValue = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--bg').trim();
+
+      if (rootValue) return rootValue;
+
+      const meta = document.querySelector(
+        'meta[name="theme-color"]'
+      );
+
+      if (meta?.content) return meta.content;
+
+    } catch (error) {
+      console.warn('Could not read theme background:', error);
     }
+
+    return '#101827';
+  }
+
+  function updateAndroidSafeAreaColor() {
+    const background = getCurrentThemeBackground();
+
+    const statusBackground = document.getElementById(
+      'android-status-bar-background'
+    );
+
+    if (statusBackground) {
+      statusBackground.style.background = background;
+    }
+
+    document.documentElement.style.setProperty(
+      '--android-status-background',
+      background
+    );
+  }
+
+  function applyAndroidSafeArea() {
+    if (!isAndroidApp()) return;
 
     document.documentElement.classList.add(
       'native-android-shell'
     );
 
-    if (!document.getElementById('android-status-bar-background')) {
-      const statusBackground = document.createElement('div');
+    let statusBackground = document.getElementById(
+      'android-status-bar-background'
+    );
 
+    if (!statusBackground) {
+      statusBackground = document.createElement('div');
       statusBackground.id = 'android-status-bar-background';
 
       Object.assign(statusBackground.style, {
@@ -50,38 +104,45 @@
         left: '0',
         right: '0',
         height: 'max(28px, env(safe-area-inset-top, 28px))',
-        background: '#36594f',
+        background: getCurrentThemeBackground(),
         zIndex: '99999',
-        pointerEvents: 'none'
+        pointerEvents: 'none',
+        transition: 'background-color .2s ease'
       });
 
       document.body.appendChild(statusBackground);
     }
 
-    if (document.getElementById('android-safe-area-fix')) {
-      return;
+    if (!document.getElementById('android-safe-area-fix')) {
+      const style = document.createElement('style');
+      style.id = 'android-safe-area-fix';
+
+      style.textContent = `
+        html.native-android-shell body {
+          padding-top: max(28px, env(safe-area-inset-top, 0px));
+        }
+
+        html.native-android-shell .topbar {
+          top: 0;
+        }
+
+        html.native-android-shell #android-status-bar-background {
+          background: var(--android-status-background, var(--bg, #101827));
+        }
+      `;
+
+      document.head.appendChild(style);
     }
 
-    const style = document.createElement('style');
-    style.id = 'android-safe-area-fix';
-
-    style.textContent = `
-      html.native-android-shell body {
-        padding-top: max(28px, env(safe-area-inset-top, 0px));
-      }
-
-      html.native-android-shell .topbar {
-        top: max(28px, env(safe-area-inset-top, 0px));
-      }
-    `;
-
-    document.head.appendChild(style);
+    updateAndroidSafeAreaColor();
   }
 
   /* ---------- LIBRARY SIDEBAR ---------- */
 
   function updateLibrarySidebar() {
-    const nav = document.querySelector('.sidebar .main-nav');
+    const nav = document.querySelector(
+      '.sidebar .main-nav'
+    );
 
     if (!nav) return;
 
@@ -89,7 +150,7 @@
       nav.querySelectorAll('a.nav-link')
     );
 
-    let libraryLink = links.find(link => {
+    let libraryLink = links.find(function (link) {
       const label = link.querySelector('b')
         ?.textContent.trim().toLowerCase();
 
@@ -101,7 +162,7 @@
       );
     });
 
-    links.forEach(link => {
+    links.forEach(function (link) {
       const label = link.querySelector('b')
         ?.textContent.trim().toLowerCase() || '';
 
@@ -110,9 +171,7 @@
         .split('#')[0];
 
       if (label === 'library') {
-        if (link !== libraryLink) {
-          link.remove();
-        }
+        if (link !== libraryLink) link.remove();
         return;
       }
 
@@ -137,7 +196,6 @@
 
     if (!libraryLink) {
       libraryLink = document.createElement('a');
-
       libraryLink.className = 'nav-link';
       libraryLink.innerHTML =
         '<span>▧</span><b>Library</b>';
@@ -171,27 +229,19 @@
   /* ---------- SHARED SIDEBAR NAVIGATION ---------- */
 
   function setupSidebarNavigation() {
-    const menuToggle =
-      document.getElementById('menuToggle');
+    const menuToggle = document.getElementById(
+      'menuToggle'
+    );
 
-    const sidebar =
-      document.querySelector('.sidebar');
+    const sidebar = document.querySelector('.sidebar');
 
-    if (!menuToggle || !sidebar) {
-      console.warn(
-        'Stories Editor: Sidebar elements not found.'
-      );
-      return;
-    }
+    if (!menuToggle || !sidebar) return;
 
     if (menuToggle.dataset.sidebarFixed === '1') {
       return;
     }
 
     menuToggle.dataset.sidebarFixed = '1';
-
-    // Prevent the old app.js sidebar handler
-    // from being attached a second time.
     menuToggle.dataset.wired = '1';
 
     menuToggle.setAttribute(
@@ -225,10 +275,6 @@
         );
       }
     });
-
-    console.info(
-      'Stories Editor: Sidebar navigation initialized.'
-    );
   }
 
   /* ---------- PLANNER NOTIFICATION ROUTING ---------- */
@@ -240,9 +286,7 @@
       'dailyPostingFolder'
     );
 
-    if (folder) {
-      folder.open = true;
-    }
+    if (folder) folder.open = true;
 
     const panel = document.querySelector(
       `[data-slot="${slotName}"]`
@@ -252,9 +296,7 @@
 
     const parentFolder = panel.closest('details');
 
-    if (parentFolder) {
-      parentFolder.open = true;
-    }
+    if (parentFolder) parentFolder.open = true;
 
     window.setTimeout(function () {
       try {
@@ -267,33 +309,26 @@
           '[data-prepare-episode], [data-start-advert]'
         );
 
-        action?.focus({
-          preventScroll: true
-        });
+        action?.focus({ preventScroll: true });
+
       } catch (error) {
-        console.warn(
-          'Could not focus the selected Planner queue:',
-          error
-        );
+        console.warn('Planner focus failed:', error);
       }
     }, 250);
   }
 
   function handlePlannerNotificationOpened(event) {
-    const slotName = event?.detail?.slot || '';
-    revealPlannerSlot(slotName);
+    revealPlannerSlot(event?.detail?.slot || '');
   }
 
   function handlePlannerNotificationQuery() {
-    const currentPage =
-      window.location.pathname.split('/').pop();
+    const currentPage = location.pathname
+      .split('/')
+      .pop();
 
     if (currentPage !== 'planner.html') return;
 
-    const params = new URLSearchParams(
-      window.location.search
-    );
-
+    const params = new URLSearchParams(location.search);
     const slotName = params.get('slot');
 
     if (!SLOT_NAMES.includes(slotName)) return;
@@ -329,13 +364,13 @@
         .split('#')[0];
 
       if (targetPage !== 'planner.html') {
-        window.location.assign('planner.html');
+        location.assign('planner.html');
         return;
       }
 
       const targetURL = new URL(
         'planner.html',
-        window.location.href
+        location.href
       );
 
       const slot = String(extra.slot || '');
@@ -344,47 +379,34 @@
         targetURL.searchParams.set('slot', slot);
       }
 
-      const currentPage =
-        window.location.pathname.split('/').pop();
+      const currentPage = location.pathname
+        .split('/')
+        .pop();
 
       if (
         currentPage === 'planner.html' &&
-        window.location.search === targetURL.search
+        location.search === targetURL.search
       ) {
         window.dispatchEvent(
-          new CustomEvent(
-            'planner:notification-opened',
-            {
-              detail: { slot }
-            }
-          )
+          new CustomEvent('planner:notification-opened', {
+            detail: { slot }
+          })
         );
 
         return;
       }
 
-      window.location.assign(
+      location.assign(
         targetURL.pathname + targetURL.search
       );
 
     } catch (error) {
-      console.warn(
-        'Could not open Planner from notification:',
-        error
-      );
-
-      window.location.assign('planner.html');
+      console.warn('Planner notification routing failed:', error);
+      location.assign('planner.html');
     }
   }
 
   /* ---------- ANDROID NOTIFICATION LISTENER ---------- */
-
-  function isAndroidApp() {
-    return (
-      window.Capacitor?.isNativePlatform?.() === true &&
-      window.Capacitor?.getPlatform?.() === 'android'
-    );
-  }
 
   function registerAndroidNotificationClicks() {
     if (
@@ -415,29 +437,19 @@
         .then(function () {
           notificationListenerRegistered = true;
           notificationRetryCount = 0;
-
           console.info(
             'Stories Editor: Android notification clicks are ready.'
           );
         })
         .catch(function (error) {
-          console.warn(
-            'Android notification listener registration failed:',
-            error
-          );
-
+          console.warn('Notification listener failed:', error);
           notificationRegistrationPromise = null;
           scheduleNotificationRetry();
         });
 
     } catch (error) {
       notificationRegistrationPromise = null;
-
-      console.warn(
-        'Could not register Android notification clicks:',
-        error
-      );
-
+      console.warn('Notification listener error:', error);
       scheduleNotificationRetry();
     }
   }
@@ -487,9 +499,7 @@
 
     const oldUrl = layer.dataset.objectUrl;
 
-    if (oldUrl) {
-      URL.revokeObjectURL(oldUrl);
-    }
+    if (oldUrl) URL.revokeObjectURL(oldUrl);
 
     const imageUrl = URL.createObjectURL(blob);
     layer.dataset.objectUrl = imageUrl;
@@ -508,9 +518,7 @@
       ) {
         brightness = savedBrightness;
       }
-    } catch (error) {
-      // Continue with default brightness.
-    }
+    } catch (error) {}
 
     const darkness =
       ((100 - brightness) / 100) * 0.65;
@@ -533,10 +541,7 @@
     try {
       request = indexedDB.open(DB_NAME, 1);
     } catch (error) {
-      console.warn(
-        'Wallpaper database could not open:',
-        error
-      );
+      console.warn('Wallpaper database could not open:', error);
       return;
     }
 
@@ -571,9 +576,7 @@
         };
 
         getRequest.onerror = function () {
-          console.warn(
-            'Could not restore saved wallpaper.'
-          );
+          console.warn('Could not restore saved wallpaper.');
         };
 
         transaction.oncomplete = function () {
@@ -585,19 +588,13 @@
         };
 
       } catch (error) {
-        console.warn(
-          'Wallpaper restoration failed:',
-          error
-        );
-
+        console.warn('Wallpaper restoration failed:', error);
         db.close();
       }
     };
 
     request.onerror = function () {
-      console.warn(
-        'Wallpaper database could not be opened.'
-      );
+      console.warn('Wallpaper database could not be opened.');
     };
   }
 
@@ -619,33 +616,45 @@
     handlePlannerNotificationOpened
   );
 
-  if (document.readyState === 'loading') {
-    document.addEventListener(
-      'DOMContentLoaded',
-      start,
-      { once: true }
-    );
-  } else {
-    start();
-  }
-
   document.addEventListener(
-    'deviceready',
-    registerAndroidNotificationClicks
+    'studio:appearance-changed',
+    updateAndroidSafeAreaColor
   );
 
   document.addEventListener(
     'visibilitychange',
     function () {
       if (!document.hidden) {
+        updateAndroidSafeAreaColor();
         registerAndroidNotificationClicks();
       }
     }
   );
 
-  window.addEventListener(
-    'focus',
-    registerAndroidNotificationClicks
-  );
+  window.addEventListener('focus', function () {
+    updateAndroidSafeAreaColor();
+    registerAndroidNotificationClicks();
+  });
+
+  window.addEventListener('pageshow', function () {
+    updateAndroidSafeAreaColor();
+  });
+
+  document.addEventListener('DOMContentLoaded', function () {
+    updateAndroidSafeAreaColor();
+  });
+
+  document.addEventListener('deviceready', function () {
+    applyAndroidSafeArea();
+    registerAndroidNotificationClicks();
+  });
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start, {
+      once: true
+    });
+  } else {
+    start();
+  }
 
 })();
