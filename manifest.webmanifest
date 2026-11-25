@@ -13,8 +13,8 @@
     "minimal-ui"
   ],
   "orientation": "portrait-primary",
-  "background_color": "#071426",
-  "theme_color": "#071426",
+  "background_color": "#101827",
+  "theme_color": "#101827",
   "categories": [
     "productivity",
     "utilities"
