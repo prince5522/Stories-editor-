@@ -3,9 +3,9 @@
 <html lang="en" data-theme="system">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#101827">
-<meta name="description" content="Create, import and manage your serial stories and seasons.">
+<meta name="description" content="Create, import and prepare serial stories and seasons.">
 <title>Story Studio — Stories Editor</title>
 
 <link rel="manifest" href="./manifest.webmanifest">
@@ -17,193 +17,267 @@
 <script src="./app-shell-behavior.js"></script>
 
 <style>
-.story-hero{
- position:relative;
- overflow:hidden;
- padding:30px 24px;
- border-radius:25px;
- margin-bottom:22px;
- background:
- radial-gradient(circle at 90% 5%,rgba(34,211,238,.25),transparent 34%),
- radial-gradient(circle at 5% 100%,rgba(99,102,241,.23),transparent 38%),
- linear-gradient(130deg,#101b35,#153653 58%,#102d43);
- border:1px solid rgba(103,232,249,.2);
- box-shadow:0 18px 42px rgba(0,0,0,.17);
+.story-hero {
+  position:relative;
+  overflow:hidden;
+  padding:clamp(25px,5vw,38px);
+  border-radius:26px;
+  margin-bottom:22px;
+  background:
+    radial-gradient(circle at 90% 5%,rgba(34,211,238,.25),transparent 34%),
+    radial-gradient(circle at 5% 100%,rgba(99,102,241,.23),transparent 38%),
+    linear-gradient(130deg,#101b35,#153653 58%,#102d43);
+  border:1px solid rgba(103,232,249,.2);
+  box-shadow:0 18px 42px rgba(0,0,0,.15);
 }
-.story-hero:after{
- content:"✎";
- position:absolute;
- right:18px;
- bottom:-48px;
- font-size:190px;
- line-height:1;
- color:rgba(255,255,255,.045);
- pointer-events:none;
+.story-hero:after {
+  content:"✎";
+  position:absolute;
+  right:18px;
+  bottom:-48px;
+  font-size:190px;
+  line-height:1;
+  color:rgba(255,255,255,.045);
+  pointer-events:none;
 }
-.story-hero h1{
- color:white;
- font-size:clamp(2.1rem,7vw,3.4rem);
- letter-spacing:-1.7px;
- position:relative;
- z-index:1;
+.story-hero h1 {
+  color:white;
+  font-size:clamp(2rem,7vw,3.4rem);
+  letter-spacing:-1.7px;
+  position:relative;
+  z-index:1;
+  margin:8px 0 12px;
 }
-.story-hero h1 span{color:#67e8f9}
-.story-hero p{position:relative;z-index:1;color:rgba(255,255,255,.75)}
-.story-hero .eyebrow{color:#67e8f9;font-weight:800;letter-spacing:2px}
-
-.story-create-panel{
- position:relative;
- overflow:hidden;
- border:1px solid var(--border-color,rgba(127,127,127,.2));
- border-radius:23px;
- background:linear-gradient(145deg,rgba(56,189,248,.075),rgba(99,102,241,.035));
- box-shadow:0 14px 35px rgba(0,0,0,.08);
+.story-hero h1 span {color:#67e8f9}
+.story-hero p {
+  position:relative;
+  z-index:1;
+  color:rgba(255,255,255,.75);
 }
-.story-create-panel:before{
- content:"";
- position:absolute;
- top:0;left:0;right:0;height:3px;
- background:linear-gradient(90deg,#38bdf8,#22d3ee,#6366f1);
+.story-hero .eyebrow {
+  color:#67e8f9;
+  font-weight:800;
+  letter-spacing:2px;
 }
-.story-form-heading{
- display:flex;
- align-items:center;
- gap:13px;
- margin-bottom:22px;
+.story-hero-copy {
+  max-width:620px;
+  line-height:1.7;
+  margin-bottom:0;
 }
-.story-form-icon{
- width:48px;height:48px;
- display:grid;place-items:center;
- flex:none;
- border-radius:16px;
- color:#67e8f9;
- font-size:23px;
- background:linear-gradient(145deg,rgba(56,189,248,.2),rgba(99,102,241,.15));
- border:1px solid rgba(56,189,248,.2);
+.story-hero-actions {
+  position:relative;
+  z-index:2;
+  display:flex;
+  flex-wrap:wrap;
+  gap:10px;
+  margin-top:20px;
 }
-#storyForm{
- display:grid;
- grid-template-columns:repeat(2,minmax(0,1fr));
- gap:17px;
+.story-hero-actions a {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:43px;
+  padding:10px 15px;
+  border-radius:13px;
+  font-size:13px;
+  font-weight:800;
+  background:rgba(255,255,255,.12);
+  border:1px solid rgba(255,255,255,.2);
+  color:white;
 }
-#storyForm label{
- display:flex;
- flex-direction:column;
- gap:8px;
- font-size:.91rem;
- font-weight:700;
- min-width:0;
+.story-hero-actions a:first-child {
+  background:linear-gradient(120deg,#087f8c,#20b6a4);
+  border-color:transparent;
 }
-#storyForm .full{grid-column:1/-1}
+.story-create-panel {
+  position:relative;
+  overflow:hidden;
+  border:1px solid var(--border-color,rgba(127,127,127,.2));
+  border-radius:23px;
+  background:
+    linear-gradient(145deg,rgba(56,189,248,.075),rgba(99,102,241,.035)),
+    var(--panel-bg,transparent);
+  box-shadow:0 14px 35px rgba(0,0,0,.07);
+}
+.story-create-panel:before {
+  content:"";
+  position:absolute;
+  top:0;
+  left:0;
+  right:0;
+  height:3px;
+  background:linear-gradient(90deg,#38bdf8,#22d3ee,#6366f1);
+}
+.story-form-heading {
+  display:flex;
+  align-items:center;
+  gap:13px;
+  margin-bottom:22px;
+}
+.story-form-icon {
+  width:49px;
+  height:49px;
+  display:grid;
+  place-items:center;
+  flex:none;
+  border-radius:16px;
+  color:#67e8f9;
+  font-size:23px;
+  background:linear-gradient(145deg,rgba(56,189,248,.2),rgba(99,102,241,.15));
+  border:1px solid rgba(56,189,248,.2);
+}
+.story-form-heading h2 {margin:0 0 5px}
+.story-form-heading p {margin:0}
+#storyForm {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:17px;
+}
+#storyForm label {
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  font-size:.91rem;
+  font-weight:700;
+  min-width:0;
+}
+#storyForm .full {grid-column:1/-1}
 #storyForm input,
 #storyForm select,
-#storyForm textarea{
- width:100%;
- min-width:0;
- border-radius:14px;
+#storyForm textarea {
+  width:100%;
+  min-width:0;
+  border-radius:14px;
 }
 #storyForm input,
-#storyForm select{min-height:48px}
-#storyForm textarea{
- min-height:150px;
- resize:vertical;
- line-height:1.65;
+#storyForm select {min-height:48px}
+#storyForm textarea {
+  min-height:170px;
+  resize:vertical;
+  line-height:1.7;
 }
 #storyForm input:focus,
 #storyForm select:focus,
-#storyForm textarea:focus,
-#storySearch:focus{
- outline:none;
- border-color:#38bdf8;
- box-shadow:0 0 0 3px rgba(56,189,248,.14);
+#storyForm textarea:focus {
+  outline:none;
+  border-color:#38bdf8;
+  box-shadow:0 0 0 3px rgba(56,189,248,.14);
 }
-#storyForm select{
- appearance:none;
- -webkit-appearance:none;
- padding-right:38px;
- background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
- background-repeat:no-repeat;
- background-position:right 13px center;
+#storyForm select {
+  appearance:none;
+  -webkit-appearance:none;
+  padding-right:38px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 13px center;
 }
-#storyForm select option{background:#152238;color:white}
-.story-form-actions{
- display:flex;
- flex-wrap:wrap;
- gap:11px;
- align-items:center;
+#storyForm select option {background:#152238;color:white}
+.story-form-actions {
+  display:flex;
+  flex-wrap:wrap;
+  gap:11px;
+  align-items:center;
 }
-.story-form-actions .button{min-height:47px;border-radius:14px}
-.story-import-note{
- padding:13px 15px;
- border:1px solid rgba(56,189,248,.15);
- background:rgba(56,189,248,.055);
- border-radius:14px;
- line-height:1.55;
+.story-form-actions .button {
+  min-height:47px;
+  border-radius:14px;
 }
-.story-library-section{margin-top:28px}
-.story-library-heading{
- display:flex;
- align-items:center;
- justify-content:space-between;
- gap:12px;
- flex-wrap:wrap;
- margin-bottom:15px;
+.story-import-note {
+  padding:13px 15px;
+  border:1px solid rgba(56,189,248,.15);
+  background:rgba(56,189,248,.055);
+  border-radius:14px;
+  line-height:1.65;
 }
-.story-library-heading h2{margin:0}
-.story-search-wrap{
- display:flex;
- flex-direction:column;
- gap:8px;
- margin-bottom:17px;
+.story-workflow {
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:14px;
+  margin-top:22px;
 }
-#storySearch{min-height:48px;border-radius:15px}
-#storyList{display:grid;gap:14px}
-#storyList .empty-state{
- padding:30px 18px;
- text-align:center;
- border:1px dashed var(--border-color,rgba(127,127,127,.35));
- border-radius:19px;
- background:rgba(255,255,255,.025);
+.story-tool-card {
+  min-width:0;
+  padding:19px;
+  border:1px solid var(--border-color,rgba(127,127,127,.2));
+  border-radius:19px;
+  background:var(--panel-bg,var(--panel,rgba(128,128,128,.04)));
 }
-#storyReaderPanel{
- border-radius:23px;
- overflow:hidden;
- border:1px solid var(--border-color,rgba(127,127,127,.2));
- background:var(--panel-bg,rgba(255,255,255,.035));
- box-shadow:0 15px 35px rgba(0,0,0,.08);
+.story-tool-icon {
+  width:43px;
+  height:43px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  margin-bottom:12px;
+  background:rgba(56,189,248,.12);
+  color:var(--text,inherit);
+  font-size:21px;
 }
-#storyReaderPanel .section-heading{
- display:flex;
- justify-content:space-between;
- align-items:center;
- gap:12px;
- flex-wrap:wrap;
+.story-tool-card h3 {margin:0 0 7px;font-size:16px}
+.story-tool-card p {
+  margin:0 0 14px;
+  color:var(--muted,#8b98a9);
+  font-size:13px;
+  line-height:1.65;
 }
-#storyReaderText{
- line-height:1.9;
- font-size:1.05rem;
- overflow-wrap:anywhere;
+.story-tool-card a {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:41px;
+  padding:9px 13px;
+  border-radius:12px;
+  background:rgba(56,189,248,.12);
+  color:var(--text,inherit);
+  font-size:12px;
+  font-weight:800;
 }
-#storyReaderMeta{margin:10px 0 18px}
-.story-reading-text{
- padding:20px;
- border-radius:16px;
- background:rgba(255,255,255,.025);
- border:1px solid rgba(127,127,127,.12);
+.story-library-notice {
+  display:flex;
+  align-items:flex-start;
+  gap:13px;
+  margin-top:22px;
+  padding:17px;
+  border:1px solid rgba(28,180,130,.2);
+  border-radius:17px;
+  background:rgba(28,180,130,.07);
 }
-.app-footer{margin-top:30px}
+.story-library-notice .notice-icon {
+  font-size:23px;
+  flex:none;
+}
+.story-library-notice strong {
+  display:block;
+  margin-bottom:4px;
+}
+.story-library-notice p {
+  margin:0;
+  color:var(--muted,#8b98a9);
+  font-size:13px;
+  line-height:1.65;
+}
+.story-library-notice a {
+  color:var(--accent,#20b6a4);
+  font-weight:850;
+}
+.app-footer {margin-top:30px}
 
-@media(max-width:560px){
- #storyForm{grid-template-columns:1fr}
- #storyForm .full{grid-column:auto}
- .story-hero{padding:25px 19px}
- .story-form-heading{align-items:flex-start}
- #storyReaderPanel .section-heading{align-items:flex-start}
- .story-reading-text{padding:15px}
+@media(max-width:560px) {
+  #storyForm {grid-template-columns:1fr}
+  #storyForm .full {grid-column:auto}
+  .story-hero {padding:24px 18px}
+  .story-form-heading {align-items:flex-start}
+  .story-workflow {grid-template-columns:1fr}
+  .story-form-actions {display:grid;grid-template-columns:1fr}
+  .story-form-actions .button {width:100%}
 }
-@media(prefers-reduced-motion:no-preference){
- .story-create-panel{transition:transform .2s ease,box-shadow .2s ease}
- .story-create-panel:focus-within{box-shadow:0 18px 40px rgba(0,0,0,.12)}
+@media(prefers-reduced-motion:no-preference) {
+  .story-create-panel {
+    transition:transform .2s ease,box-shadow .2s ease;
+  }
+  .story-create-panel:focus-within {
+    box-shadow:0 18px 40px rgba(0,0,0,.12);
+  }
 }
 </style>
 </head>
@@ -213,154 +287,186 @@
 
 <aside class="sidebar">
 <a class="brand" href="./home.html">
-<span class="brand-mark small-mark">SE</span>
-<span class="brand-name">
-<strong>Stories Editor</strong>
-<small>YOUR CREATIVE WORKSPACE</small>
-</span>
+  <span class="brand-mark small-mark">SE</span>
+  <span class="brand-name">
+    <strong>Stories Editor</strong>
+    <small>YOUR CREATIVE WORKSPACE</small>
+  </span>
 </a>
 
 <div>
-<p class="nav-caption">WORKSPACE</p>
-<nav class="main-nav" aria-label="Main navigation">
-<a class="nav-link" href="./home.html"><span>⌂</span><b>Home</b></a>
-<a class="nav-link" href="./ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
-<a class="nav-link" href="./library.html"><span>▧</span><b>Library</b></a>
-<a class="nav-link" href="./media.html"><span>▣</span><b>Media Library</b></a>
-<a class="nav-link" href="./docs.html"><span>▤</span><b>Document Reader</b></a>
-</nav>
+  <p class="nav-caption">WORKSPACE</p>
+  <nav class="main-nav" aria-label="Main navigation">
+    <a class="nav-link" href="./home.html"><span>⌂</span><b>Home</b></a>
+    <a class="nav-link" href="./ready-made.html"><span>✍</span><b>Ready-Made Episodes</b></a>
+    <a class="nav-link" href="./library.html"><span>▧</span><b>Library</b></a>
+    <a class="nav-link" href="./media.html"><span>▣</span><b>Media Library</b></a>
+    <a class="nav-link" href="./docs.html"><span>▤</span><b>Document Reader</b></a>
+  </nav>
 </div>
 
 <div class="sidebar-bottom">
-<strong>Your creative space</strong>
-<p>Write, organise and prepare your stories in one place.</p>
+  <strong>Your creative space</strong>
+  <p>Write, organise and prepare your stories in one place.</p>
 </div>
 </aside>
 
 <div class="main-column">
 
 <header class="topbar">
-<button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
-<div>
-<p class="eyebrow">STORIES EDITOR</p>
-<p class="topbar-title">Story Studio</p>
-</div>
-<div class="topbar-actions">
-<button id="quickTheme" class="icon-button" aria-label="Toggle theme" title="Toggle theme">◐</button>
-<a class="avatar-link" href="settings.html" aria-label="Settings">CS</a>
-</div>
+  <button id="menuToggle" class="icon-button mobile-menu" aria-label="Open menu">☰</button>
+  <div>
+    <p class="eyebrow">STORIES EDITOR</p>
+    <p class="topbar-title">Story Studio</p>
+  </div>
+  <div class="topbar-actions">
+    <button id="quickTheme" class="icon-button" aria-label="Toggle theme" title="Toggle theme">◐</button>
+    <a class="avatar-link" href="settings.html" aria-label="Settings">CS</a>
+  </div>
 </header>
 
 <main class="page-content page-enter">
 
 <section class="page-intro story-hero">
-<p class="eyebrow">YOUR STORY WORKSPACE</p>
-<h1>Build your <span>stories.</span></h1>
-<p>Create serial stories, organise seasons, import manuscripts and read your saved drafts.</p>
+  <p class="eyebrow">YOUR STORY WORKSPACE</p>
+  <h1>Build your <span>stories.</span></h1>
+  <p class="story-hero-copy">
+    Create new serial stories, import manuscripts, prepare season text
+    and continue writing. Your saved collection is organised in the Library.
+  </p>
+
+  <div class="story-hero-actions">
+    <a href="./library.html">▧ Open Story Library</a>
+    <a href="./episodes.html">✂ Open Episode Splitter</a>
+  </div>
 </section>
 
 <section class="panel story-create-panel">
-<div class="story-form-heading">
-<div class="story-form-icon">✍</div>
-<div>
-<p class="eyebrow">CREATE & IMPORT</p>
-<h2>New serial story or season</h2>
-<p class="small muted">Add your story details and save its text.</p>
-</div>
-</div>
+  <div class="story-form-heading">
+    <div class="story-form-icon">✍</div>
+    <div>
+      <p class="eyebrow">CREATE & IMPORT</p>
+      <h2>New serial story or season</h2>
+      <p class="small muted">Add your story details and save its text.</p>
+    </div>
+  </div>
 
-<form id="storyForm" class="form-grid">
+  <form id="storyForm" class="form-grid">
 
-<label>
-Story / season title
-<input id="storyTitle" required maxlength="120" placeholder="e.g. The Hidden Promise">
-</label>
+    <label>
+      Story / season title
+      <input id="storyTitle" required maxlength="120" placeholder="e.g. The Hidden Promise">
+    </label>
 
-<label>
-Season number
-<input id="storySeason" type="number" min="1" max="999" value="1">
-</label>
+    <label>
+      Season number
+      <input id="storySeason" type="number" min="1" max="999" value="1">
+    </label>
 
-<label>
-Genre / category
-<select id="storyGenre">
-<option>General</option>
-<option>Romance</option>
-<option>Drama</option>
-<option>Thriller</option>
-<option>Comedy</option>
-<option>Fantasy</option>
-<option>Action</option>
-<option>Inspirational</option>
-<option>Other</option>
-</select>
-</label>
+    <label>
+      Genre / category
+      <select id="storyGenre">
+        <option>General</option>
+        <option>Romance</option>
+        <option>Drama</option>
+        <option>Thriller</option>
+        <option>Comedy</option>
+        <option>Fantasy</option>
+        <option>Action</option>
+        <option>Inspirational</option>
+        <option>Other</option>
+      </select>
+    </label>
 
-<label class="full">
-Short description (optional)
-<input id="storyDescription" maxlength="240" placeholder="A short note about this season">
-</label>
+    <label class="full">
+      Short description (optional)
+      <input id="storyDescription" maxlength="240" placeholder="A short note about this season">
+    </label>
 
-<label>
-Import file (PDF or text)
-<input id="storyFile" type="file" accept=".pdf,.txt,.md,text/plain,application/pdf">
-</label>
+    <label>
+      Import file (PDF or text)
+      <input id="storyFile" type="file" accept=".pdf,.txt,.md,text/plain,application/pdf">
+    </label>
 
-<label class="full">
-Or paste story text
-<textarea id="storyText" rows="7" placeholder="Paste your story text here…"></textarea>
-</label>
+    <label class="full">
+      Or paste story text
+      <textarea id="storyText" rows="7" placeholder="Paste your story text here…"></textarea>
+    </label>
 
-<div class="full story-form-actions row-wrap">
-<button class="button primary" type="submit">Save story</button>
-<button class="button ghost" type="button" id="clearStoryForm">Clear form</button>
-</div>
+    <div class="full story-form-actions row-wrap">
+      <button class="button primary" type="submit">Save story</button>
+      <button class="button ghost" type="button" id="clearStoryForm">Clear form</button>
+    </div>
 
-<p class="small muted full story-import-note">
-PDF text extraction is supported. Scanned PDFs may require OCR. PDF.js is loaded from a CDN when online. Saved story text remains in your browser's local storage.
-</p>
-</form>
+    <p class="small muted full story-import-note">
+      PDF text extraction is supported. Scanned PDFs may require OCR.
+      PDF.js is loaded from a CDN when online. Saved story text remains
+      on this device and is available in your Story Library.
+    </p>
+  </form>
 </section>
 
-<section class="section-block story-library-section">
-<div class="story-library-heading">
-<div>
-<p class="eyebrow">YOUR COLLECTION</p>
-<h2>Season library</h2>
-</div>
-<span class="pill" id="storyLibraryCount">0 seasons</span>
-</div>
+<section class="story-workflow" aria-label="Story tools">
 
-<label class="story-search-wrap">
-Search your seasons
-<input id="storySearch" type="search" placeholder="Search by title, genre or text…">
-</label>
+  <article class="story-tool-card">
+    <div class="story-tool-icon">▧</div>
+    <h3>Story Library</h3>
+    <p>
+      Browse saved stories, organise seasons, read manuscripts,
+      edit saved content and manage your collection.
+    </p>
+    <a href="./library.html">Open Library →</a>
+  </article>
 
-<div id="storyList" class="story-list">
-<div class="empty-state">
-Your library is empty. Import your first story above.
-</div>
-</div>
+  <article class="story-tool-card">
+    <div class="story-tool-icon">✂</div>
+    <h3>Episode Splitter</h3>
+    <p>
+      Select a saved story, split its text into episodes,
+      preview the results and save the episodes.
+    </p>
+    <a href="./episodes.html">Open Splitter →</a>
+  </article>
+
 </section>
 
-<section class="section-block" id="storyReaderPanel" hidden>
-<div class="section-heading">
-<h2 id="storyReaderTitle">Reading room</h2>
-<div class="row-wrap">
-<button class="button ghost small-button" id="storyFontDown" type="button">A−</button>
-<button class="button ghost small-button" id="storyFontUp" type="button">A+</button>
-<button class="button ghost small-button" id="closeStoryReader" type="button">Close</button>
-</div>
-</div>
-<p id="storyReaderMeta" class="small muted"></p>
-<article id="storyReaderText" class="story-reading-text"></article>
+<section class="story-library-notice">
+  <span class="notice-icon">📚</span>
+  <div>
+    <strong>Your saved stories live in one place</strong>
+    <p>
+      To keep this workspace focused on writing, saved story cards and
+      reading lists are shown in <a href="./library.html">Library</a>,
+      not on this page. You can still create and import stories here.
+    </p>
+  </div>
 </section>
+
+<!--
+  Compatibility elements retained for the existing story engine.
+  Saved story cards are intentionally not displayed on this page.
+-->
+<div hidden aria-hidden="true">
+  <span id="storyLibraryCount">0 seasons</span>
+  <input id="storySearch" type="search">
+  <div id="storyList"></div>
+
+  <section id="storyReaderPanel" hidden>
+    <h2 id="storyReaderTitle">Reading room</h2>
+    <button id="storyFontDown" type="button">A−</button>
+    <button id="storyFontUp" type="button">A+</button>
+    <button id="closeStoryReader" type="button">Close</button>
+    <p id="storyReaderMeta"></p>
+    <article id="storyReaderText"></article>
+    <button id="markStoryRead" type="button">Mark as read</button>
+  </section>
+</div>
 
 </main>
 
 <footer class="app-footer">
-Made for your stories
-<span class="muted">Local-first • Your content stays yours</span>
+  Made for your stories
+  <span class="muted">Local-first • Your content stays yours</span>
 </footer>
 
 </div>
