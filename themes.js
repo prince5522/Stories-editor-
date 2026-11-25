@@ -3,8 +3,8 @@
   'use strict';
 
   /* ==========================================
-     CHANNEL STUDIO — APPEARANCE CONTROLLER
-     Themes, fonts, motion and saved preferences
+     STORIES EDITOR — APPEARANCE CONTROLLER
+     Themes, fonts, motion and Android status bar
      ========================================== */
 
   const DEFAULTS = {
@@ -65,6 +65,22 @@
   const DARK_THEMES = [
     'dark', 'ocean', 'forest', 'midnight', 'neon', 'amoled'
   ];
+
+  const STATUS_COLORS = {
+    light: '#f4f7fb',
+    dark: '#101827',
+    ocean: '#071d2b',
+    sunset: '#fff1e9',
+    forest: '#101f19',
+    midnight: '#090d20',
+    rose: '#fff1f5',
+    arctic: '#edf8ff',
+    neon: '#080b12',
+    amoled: '#000000'
+  };
+
+  let statusBarUpdateRunning = false;
+  let lastStatusSignature = '';
 
   function normalize(value, allowed, fallback) {
     return allowed.includes(value) ? value : fallback;
@@ -173,6 +189,140 @@
     }
   }
 
+  /* ---------- STATUS BAR META ---------- */
+
+  function updateThemeColorMeta(color) {
+    let meta = document.querySelector('meta[name="theme-color"]');
+
+    if (!meta) {
+      meta = document.createElement('meta');
+      meta.name = 'theme-color';
+      document.head.appendChild(meta);
+    }
+
+    meta.setAttribute('content', color);
+  }
+
+  /* ---------- ANDROID STATUS BAR ---------- */
+
+  function getStatusBarPlugin() {
+    const capacitor = window.Capacitor;
+
+    if (!capacitor) return null;
+
+    try {
+      if (
+        capacitor.Plugins &&
+        capacitor.Plugins.StatusBar
+      ) {
+        return capacitor.Plugins.StatusBar;
+      }
+    } catch (error) {}
+
+    return null;
+  }
+
+  function getStatusBackground(theme) {
+    const fallback = STATUS_COLORS[theme] || STATUS_COLORS.dark;
+
+    try {
+      const rootColor = getComputedStyle(
+        document.documentElement
+      ).getPropertyValue('--bg').trim();
+
+      if (
+        rootColor &&
+        /^#[0-9a-f]{3,8}$/i.test(rootColor)
+      ) {
+        return rootColor;
+      }
+
+      if (
+        rootColor &&
+        /^rgba?\(/i.test(rootColor)
+      ) {
+        return rootColor;
+      }
+    } catch (error) {}
+
+    return fallback;
+  }
+
+  async function updateAndroidStatusBar() {
+    if (statusBarUpdateRunning) return;
+
+    const capacitor = window.Capacitor;
+
+    if (!capacitor) return;
+
+    let platform = '';
+
+    try {
+      platform = typeof capacitor.getPlatform === 'function'
+        ? capacitor.getPlatform()
+        : '';
+    } catch (error) {}
+
+    if (platform !== 'android') return;
+
+    const plugin = getStatusBarPlugin();
+
+    if (!plugin) {
+      console.warn(
+        'StatusBar plugin is not available. Check Android build dependencies.'
+      );
+      return;
+    }
+
+    const theme = document.documentElement.dataset.theme || 'dark';
+    const darkBackground = DARK_THEMES.includes(theme);
+    const background = getStatusBackground(theme);
+
+    const signature = [
+      theme,
+      background,
+      darkBackground ? 'light-icons' : 'dark-icons'
+    ].join('|');
+
+    if (signature === lastStatusSignature) return;
+
+    statusBarUpdateRunning = true;
+
+    try {
+      if (typeof plugin.setOverlaysWebView === 'function') {
+        await plugin.setOverlaysWebView({
+          overlay: false
+        });
+      }
+
+      if (typeof plugin.setBackgroundColor === 'function') {
+        await plugin.setBackgroundColor({
+          color: background
+        });
+      }
+
+      if (typeof plugin.setStyle === 'function') {
+        await plugin.setStyle({
+          style: darkBackground ? 'LIGHT' : 'DARK'
+        });
+      }
+
+      lastStatusSignature = signature;
+    } catch (error) {
+      console.warn('Android status bar update failed:', error);
+    } finally {
+      statusBarUpdateRunning = false;
+    }
+  }
+
+  function refreshStatusBar() {
+    const theme = document.documentElement.dataset.theme || 'dark';
+    const background = getStatusBackground(theme);
+
+    updateThemeColorMeta(background);
+    updateAndroidStatusBar();
+  }
+
   /* ---------- APPLY THEME ---------- */
 
   function applyTheme(theme) {
@@ -195,6 +345,8 @@
       document.body.dataset.theme = actualTheme;
       document.body.dataset.savedTheme = theme;
     }
+
+    refreshStatusBar();
 
     return actualTheme;
   }
@@ -266,6 +418,7 @@
 
   window.applyStudioTheme = apply;
   window.saveStudioAppearance = saveStudioAppearance;
+  window.refreshStudioStatusBar = refreshStatusBar;
 
   /* ---------- AUTOMATIC SELECTOR LISTENERS ---------- */
 
@@ -321,11 +474,30 @@
     }
   }
 
+  /* ---------- APP LIFECYCLE ---------- */
+
+  document.addEventListener('studio:appearance-changed', function () {
+    refreshStatusBar();
+  });
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) {
+      lastStatusSignature = '';
+      apply();
+    }
+  });
+
+  window.addEventListener('pageshow', function () {
+    lastStatusSignature = '';
+    apply();
+  });
+
   /* ---------- INITIALIZATION ---------- */
 
   document.addEventListener('DOMContentLoaded', apply);
 
   window.addEventListener('storage', function () {
+    lastStatusSignature = '';
     apply();
   });
 
