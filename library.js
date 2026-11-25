@@ -1,9 +1,20 @@
 
+/* =========================================================
+   STORIES EDITOR — CENTRAL LIBRARY
+   Version: 2.0
+
+   - Displays saved serial stories and episodes
+   - Displays ready-made stories and episodes
+   - Groups content by story and season
+   - Search across titles and saved text
+   - Reads existing storage without changing data
+   - Refreshes when saved content changes
+========================================================= */
+
 (function () {
   'use strict';
 
   const $ = id => document.getElementById(id);
-
   const store = () => window.StudioStore;
 
   const read = key => {
@@ -16,37 +27,74 @@
     }
   };
 
-  const escapeHTML = value => String(value ?? '').replace(/[&<>"']/g, char => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#39;'
-  }[char]));
+  const escapeHTML = value =>
+    String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;'
+    }[char]));
 
-  const normalize = value => String(value || '')
-    .normalize('NFKC')
-    .toLowerCase()
-    .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g, '')
-    .replace(/[^\p{L}\p{N}]+/gu, '');
+  const normalize = value =>
+    String(value || '')
+      .normalize('NFKC')
+      .toLowerCase()
+      .replace(/[\u200B-\u200D\uFEFF\uFE0E\uFE0F]/g, '')
+      .replace(/[^\p{L}\p{N}]+/gu, '');
 
-  const storyTitle = item =>
-    String(item.storyTitle || item.seasonTitle || item.title || 'Untitled story').trim();
+  const serialTitle = item =>
+    String(
+      item.storyTitle ||
+      item.seasonTitle ||
+      item.title ||
+      'Untitled story'
+    ).trim();
 
   const readyTitle = item =>
-    String(item.story_title || item.storyName || 'Ready-made stories').trim();
+    String(
+      item.story_title ||
+      item.storyName ||
+      'Ready-made stories'
+    ).trim();
 
   const seasonNumber = item =>
-    Math.max(1, Number(item.seasonNumber || item.season_number) || 1);
+    Math.max(
+      1,
+      Number(item.seasonNumber || item.season_number) || 1
+    );
 
   const episodeNumber = item =>
-    Math.max(1, Number(item.episodeNumber || item.episode_number) || 1);
+    Math.max(
+      1,
+      Number(item.episodeNumber || item.episode_number) || 1
+    );
 
-  const episodeContent = item =>
-    String(item.content ?? item.episode_text ?? '');
+  const serialContent = item =>
+    String(
+      item.content ??
+      item.episode_text ??
+      item.episodeText ??
+      item.text ??
+      ''
+    );
+
+  const readyContent = item =>
+    String(
+      item.episode_text ??
+      item.episodeText ??
+      item.content ??
+      item.text ??
+      ''
+    );
 
   const episodeTitle = item =>
-    String(item.title || item.episode_name || `Episode ${episodeNumber(item)}`);
+    String(
+      item.title ||
+      item.episode_name ||
+      item.episodeName ||
+      `Episode ${episodeNumber(item)}`
+    );
 
   let activeTab = 'serial';
   let searchTerm = '';
@@ -54,6 +102,8 @@
     serial: [],
     ready: []
   };
+
+  let refreshQueued = false;
 
   function toast(message) {
     if (typeof window.studioToast === 'function') {
@@ -63,8 +113,8 @@
     }
   }
 
-  function addToGroup(map, title, season) {
-    const key = normalize(title);
+  function addToGroup(map, title, number) {
+    const key = normalize(title) || 'untitledstory';
 
     if (!map.has(key)) {
       map.set(key, {
@@ -74,123 +124,130 @@
     }
 
     const group = map.get(key);
-    const number = Math.max(1, Number(season) || 1);
+    const season = Math.max(1, Number(number) || 1);
 
-    if (!group.seasons.has(number)) {
-      group.seasons.set(number, {
-        number,
+    if (!group.seasons.has(season)) {
+      group.seasons.set(season, {
+        number: season,
         manuscripts: [],
         episodes: []
       });
     }
 
-    return group.seasons.get(number);
+    return group.seasons.get(season);
+  }
+
+  function finishGroups(groups) {
+    return [...groups.values()]
+      .map(group => {
+        group.seasons = [...group.seasons.values()]
+          .sort((a, b) => a.number - b.number);
+
+        group.seasons.forEach(season => {
+          season.episodes.sort((a, b) =>
+            episodeNumber(a) - episodeNumber(b)
+          );
+        });
+
+        return group;
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
   }
 
   function buildSerialCollection() {
-    const stories = read('stories');
-    const episodes = read('episodes');
     const groups = new Map();
 
-    stories.forEach(story => {
-      const title = String(story.title || 'Untitled story').trim();
-      const season = seasonNumber(story);
+    read('stories').forEach(story => {
+      const title = String(
+        story.title || 'Untitled story'
+      ).trim();
 
-      const folder = addToGroup(groups, title, season);
+      const folder = addToGroup(
+        groups,
+        title,
+        seasonNumber(story)
+      );
+
       folder.manuscripts.push(story);
     });
 
-    episodes.forEach(episode => {
+    read('episodes').forEach(episode => {
       if (episode.archived) return;
 
-      const title = storyTitle(episode);
-      const season = seasonNumber(episode);
+      const folder = addToGroup(
+        groups,
+        serialTitle(episode),
+        seasonNumber(episode)
+      );
 
-      const folder = addToGroup(groups, title, season);
       folder.episodes.push(episode);
     });
 
-    return [...groups.values()]
-      .map(group => {
-        group.seasons = [...group.seasons.values()]
-          .sort((a, b) => a.number - b.number);
-
-        group.seasons.forEach(season => {
-          season.episodes.sort((a, b) =>
-            episodeNumber(a) - episodeNumber(b)
-          );
-        });
-
-        return group;
-      })
-      .sort((a, b) => a.title.localeCompare(b.title));
+    return finishGroups(groups);
   }
 
   function buildReadyCollection() {
-    const episodes = read('readyMadeEpisodes');
     const groups = new Map();
 
-    episodes.forEach(episode => {
-      const title = readyTitle(episode);
-      const season = seasonNumber(episode);
+    read('readyMadeEpisodes').forEach(episode => {
+      const folder = addToGroup(
+        groups,
+        readyTitle(episode),
+        seasonNumber(episode)
+      );
 
-      const folder = addToGroup(groups, title, season);
       folder.episodes.push(episode);
     });
 
-    return [...groups.values()]
-      .map(group => {
-        group.seasons = [...group.seasons.values()]
-          .sort((a, b) => a.number - b.number);
-
-        group.seasons.forEach(season => {
-          season.episodes.sort((a, b) =>
-            episodeNumber(a) - episodeNumber(b)
-          );
-        });
-
-        return group;
-      })
-      .sort((a, b) => a.title.localeCompare(b.title));
+    return finishGroups(groups);
   }
 
-  function groupEpisodeCount(group) {
+  function countEpisodes(group) {
     return group.seasons.reduce(
       (total, season) => total + season.episodes.length,
       0
     );
   }
 
+  function matchesSearch(value) {
+    if (!searchTerm) return true;
+
+    return String(value || '')
+      .toLowerCase()
+      .includes(searchTerm.toLowerCase());
+  }
+
   function groupMatches(group) {
     if (!searchTerm) return true;
 
-    const query = searchTerm.toLowerCase();
-
-    if (group.title.toLowerCase().includes(query)) return true;
+    if (matchesSearch(group.title)) return true;
 
     return group.seasons.some(season => {
-      if (`season ${season.number}`.includes(query)) return true;
+      if (matchesSearch(`season ${season.number}`)) {
+        return true;
+      }
 
-      if (season.manuscripts.some(story =>
+      const manuscriptMatch = season.manuscripts.some(story =>
         [
           story.title,
           story.genre,
           story.description,
           story.content
-        ].some(value =>
-          String(value || '').toLowerCase().includes(query)
-        )
-      )) return true;
+        ].some(matchesSearch)
+      );
+
+      if (manuscriptMatch) return true;
 
       return season.episodes.some(episode =>
         [
           episodeTitle(episode),
-          episodeContent(episode),
+          serialContent(episode),
+          readyContent(episode),
           episode.episode_subtitle,
-          episode.status
-        ].some(value =>
-          String(value || '').toLowerCase().includes(query)
-        )
+          episode.status,
+          episode.storyTitle,
+          episode.story_title
+        ].some(matchesSearch)
       );
     });
   }
@@ -200,19 +257,19 @@
 
     if (!content.trim()) return '';
 
+    const words = content.trim().split(/\s+/).length;
+
     return `
       <article class="library-episode">
         <h3>📖 Original season manuscript</h3>
-
         <p>
           ${escapeHTML(story.genre || 'General')}
-          · ${content.trim().split(/\s+/).length} words
+          · ${words.toLocaleString()} words
         </p>
-
         <div class="library-episode-actions">
           <button type="button"
             data-library-read="manuscript"
-            data-story-id="${escapeHTML(story.id)}">
+            data-story-id="${escapeHTML(story.id ?? '')}">
             Read full season
           </button>
         </div>
@@ -221,10 +278,12 @@
   }
 
   function renderEpisode(episode, type) {
-    const content = episodeContent(episode);
+    const content = type === 'ready'
+      ? readyContent(episode)
+      : serialContent(episode);
+
     const number = episodeNumber(episode);
     const title = episodeTitle(episode);
-
     const words = content.trim()
       ? content.trim().split(/\s+/).length
       : 0;
@@ -232,8 +291,6 @@
     const status = type === 'ready'
       ? String(episode.status || 'draft')
       : 'saved';
-
-    const id = episode.id ?? '';
 
     return `
       <article class="library-episode">
@@ -258,7 +315,7 @@
         <div class="library-episode-actions">
           <button type="button"
             data-library-read="${type}"
-            data-episode-id="${escapeHTML(id)}">
+            data-episode-id="${escapeHTML(episode.id ?? '')}">
             Read episode
           </button>
         </div>
@@ -283,7 +340,9 @@
           📂 Season ${season.number}
           <span class="small muted">
             ${total} episode${total === 1 ? '' : 's'}
-            ${season.manuscripts.length ? ' · Manuscript saved' : ''}
+            ${season.manuscripts.length
+              ? ' · Manuscript saved'
+              : ''}
           </span>
         </summary>
 
@@ -313,7 +372,7 @@
     }
 
     return visible.map(group => {
-      const count = groupEpisodeCount(group);
+      const count = countEpisodes(group);
 
       const seasonHTML = group.seasons
         .map(season => renderSeason(season, type))
@@ -329,8 +388,10 @@
             <span class="folder-heading">
               <strong>${escapeHTML(group.title)}</strong>
               <small>
-                ${group.seasons.length} season${group.seasons.length === 1 ? '' : 's'}
-                · ${count} episode${count === 1 ? '' : 's'}
+                ${group.seasons.length}
+                season${group.seasons.length === 1 ? '' : 's'}
+                · ${count}
+                episode${count === 1 ? '' : 's'}
               </small>
             </span>
           </summary>
@@ -345,18 +406,19 @@
 
   function renderStats() {
     const serialStories = read('stories');
-    const serialEpisodes = read('episodes').filter(ep => !ep.archived);
+    const serialEpisodes = read('episodes')
+      .filter(episode => !episode.archived);
+
     const readyEpisodes = read('readyMadeEpisodes');
 
     const serialGroups = collections.serial.length;
     const readyGroups = collections.ready.length;
 
-    const totalEpisodes =
-      serialEpisodes.length + readyEpisodes.length;
-
     $('librarySerialCount').textContent = serialGroups;
     $('libraryReadyCount').textContent = readyGroups;
-    $('libraryEpisodeCount').textContent = totalEpisodes;
+
+    $('libraryEpisodeCount').textContent =
+      serialEpisodes.length + readyEpisodes.length;
 
     $('serialSectionCount').textContent =
       `${serialGroups} stor${serialGroups === 1 ? 'y' : 'ies'}`;
@@ -364,7 +426,6 @@
     $('readySectionCount').textContent =
       `${readyGroups} stor${readyGroups === 1 ? 'y' : 'ies'}`;
 
-    // Keep references to source counts for diagnostics.
     console.info('Library loaded:', {
       serialManuscripts: serialStories.length,
       serialEpisodes: serialEpisodes.length,
@@ -373,6 +434,8 @@
   }
 
   function render() {
+    if (!$('serialFolders')) return;
+
     collections.serial = buildSerialCollection();
     collections.ready = buildReadyCollection();
 
@@ -387,8 +450,15 @@
     $('serialSection').hidden = activeTab !== 'serial';
     $('readySection').hidden = activeTab !== 'ready';
 
-    $('serialTab').classList.toggle('active', activeTab === 'serial');
-    $('readyTab').classList.toggle('active', activeTab === 'ready');
+    $('serialTab').classList.toggle(
+      'active',
+      activeTab === 'serial'
+    );
+
+    $('readyTab').classList.toggle(
+      'active',
+      activeTab === 'ready'
+    );
 
     $('serialTab').setAttribute(
       'aria-selected',
@@ -432,7 +502,10 @@
     const type = button.dataset.libraryRead;
 
     if (type === 'manuscript') {
-      const story = findById(read('stories'), button.dataset.storyId);
+      const story = findById(
+        read('stories'),
+        button.dataset.storyId
+      );
 
       if (!story) {
         toast('This story could not be found in storage.');
@@ -461,8 +534,8 @@
 
       showReader(
         episodeTitle(episode),
-        `${storyTitle(episode)} · Season ${seasonNumber(episode)} · Episode ${episodeNumber(episode)}`,
-        episode.content || ''
+        `${serialTitle(episode)} · Season ${seasonNumber(episode)} · Episode ${episodeNumber(episode)}`,
+        serialContent(episode)
       );
 
       return;
@@ -482,7 +555,7 @@
       showReader(
         episodeTitle(episode),
         `${readyTitle(episode)} · Season ${seasonNumber(episode)} · Episode ${episodeNumber(episode)}`,
-        episode.episode_text || ''
+        readyContent(episode)
       );
     }
   }
@@ -492,6 +565,17 @@
 
     activeTab = tab;
     render();
+  }
+
+  function queueRefresh() {
+    if (refreshQueued) return;
+
+    refreshQueued = true;
+
+    requestAnimationFrame(() => {
+      refreshQueued = false;
+      render();
+    });
   }
 
   function init() {
@@ -514,21 +598,40 @@
       render();
     });
 
-    $('serialFolders').addEventListener('click', handleReadClick);
-    $('readyFolders').addEventListener('click', handleReadClick);
+    $('serialFolders').addEventListener(
+      'click',
+      handleReadClick
+    );
+
+    $('readyFolders').addEventListener(
+      'click',
+      handleReadClick
+    );
 
     $('libraryCloseReader').addEventListener('click', () => {
       $('libraryReader').hidden = true;
     });
 
-    // Re-read saved data whenever this page becomes visible again.
     window.addEventListener('pageshow', render);
-
     window.addEventListener('focus', render);
 
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden) render();
     });
+
+    window.addEventListener(
+      'channelstudio:store-changed',
+      event => {
+        const key = event.detail?.key;
+
+        if (
+          !key ||
+          ['stories', 'episodes', 'readyMadeEpisodes'].includes(key)
+        ) {
+          queueRefresh();
+        }
+      }
+    );
 
     render();
   }
@@ -550,7 +653,11 @@
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, { once: true });
+    document.addEventListener(
+      'DOMContentLoaded',
+      start,
+      { once: true }
+    );
   } else {
     start();
   }
