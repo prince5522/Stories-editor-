@@ -63,24 +63,26 @@
   };
 
   const DARK_THEMES = [
-    'dark', 'ocean', 'forest', 'midnight', 'neon', 'amoled'
+    'dark', 'ocean', 'sunset', 'forest',
+    'midnight', 'rose', 'arctic', 'neon', 'amoled'
   ];
 
   const STATUS_COLORS = {
-    light: '#f4f7fb',
+    light: '#edf3fa',
     dark: '#101827',
-    ocean: '#071d2b',
-    sunset: '#fff1e9',
-    forest: '#101f19',
-    midnight: '#090d20',
-    rose: '#fff1f5',
-    arctic: '#edf8ff',
-    neon: '#080b12',
+    ocean: '#071d32',
+    sunset: '#281727',
+    forest: '#10251e',
+    midnight: '#080d20',
+    rose: '#2b1727',
+    arctic: '#142638',
+    neon: '#100d20',
     amoled: '#000000'
   };
 
   let statusBarUpdateRunning = false;
   let lastStatusSignature = '';
+  let cachedStatusBarPlugin = null;
 
   function normalize(value, allowed, fallback) {
     return allowed.includes(value) ? value : fallback;
@@ -105,7 +107,6 @@
 
     try {
       const value = localStorage.getItem('studio_' + key);
-
       if (value !== null) return value;
     } catch (error) {}
 
@@ -129,9 +130,7 @@
     if (!saved) {
       try {
         localStorage.setItem('studio_' + key, value);
-      } catch (error) {
-        console.warn('Local appearance save error:', error);
-      }
+      } catch (error) {}
     }
   }
 
@@ -184,12 +183,11 @@
         '--studio-font-family',
         stack
       );
-
       document.body.style.fontFamily = stack;
     }
   }
 
-  /* ---------- STATUS BAR META ---------- */
+  /* ---------- THEME META COLOUR ---------- */
 
   function updateThemeColorMeta(color) {
     let meta = document.querySelector('meta[name="theme-color"]');
@@ -206,6 +204,10 @@
   /* ---------- ANDROID STATUS BAR ---------- */
 
   function getStatusBarPlugin() {
+    if (cachedStatusBarPlugin) {
+      return cachedStatusBarPlugin;
+    }
+
     const capacitor = window.Capacitor;
 
     if (!capacitor) return null;
@@ -215,9 +217,19 @@
         capacitor.Plugins &&
         capacitor.Plugins.StatusBar
       ) {
-        return capacitor.Plugins.StatusBar;
+        cachedStatusBarPlugin = capacitor.Plugins.StatusBar;
+        return cachedStatusBarPlugin;
       }
     } catch (error) {}
+
+    try {
+      if (typeof capacitor.registerPlugin === 'function') {
+        cachedStatusBarPlugin = capacitor.registerPlugin('StatusBar');
+        return cachedStatusBarPlugin;
+      }
+    } catch (error) {
+      console.warn('Could not register StatusBar plugin:', error);
+    }
 
     return null;
   }
@@ -226,22 +238,33 @@
     const fallback = STATUS_COLORS[theme] || STATUS_COLORS.dark;
 
     try {
-      const rootColor = getComputedStyle(
+      const elements = [
+        document.body,
         document.documentElement
-      ).getPropertyValue('--bg').trim();
+      ].filter(Boolean);
 
-      if (
-        rootColor &&
-        /^#[0-9a-f]{3,8}$/i.test(rootColor)
-      ) {
-        return rootColor;
-      }
+      for (const element of elements) {
+        const value = getComputedStyle(element)
+          .getPropertyValue('--bg')
+          .trim();
 
-      if (
-        rootColor &&
-        /^rgba?\(/i.test(rootColor)
-      ) {
-        return rootColor;
+        if (/^#[0-9a-f]{3,8}$/i.test(value)) {
+          return value;
+        }
+
+        const rgb = value.match(
+          /^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i
+        );
+
+        if (rgb) {
+          return '#' + [rgb[1], rgb[2], rgb[3]]
+            .map(function (part) {
+              return Math.max(0, Math.min(255, Number(part)))
+                .toString(16)
+                .padStart(2, '0');
+            })
+            .join('');
+        }
       }
     } catch (error) {}
 
@@ -269,7 +292,7 @@
 
     if (!plugin) {
       console.warn(
-        'StatusBar plugin is not available. Check Android build dependencies.'
+        'StatusBar plugin unavailable. Check package.json and run Capacitor sync.'
       );
       return;
     }
@@ -289,22 +312,39 @@
     statusBarUpdateRunning = true;
 
     try {
-      if (typeof plugin.setOverlaysWebView === 'function') {
-        await plugin.setOverlaysWebView({
-          overlay: false
-        });
-      }
-
-      if (typeof plugin.setBackgroundColor === 'function') {
-        await plugin.setBackgroundColor({
-          color: background
-        });
-      }
-
       if (typeof plugin.setStyle === 'function') {
         await plugin.setStyle({
-          style: darkBackground ? 'LIGHT' : 'DARK'
+          style: darkBackground ? 'DARK' : 'LIGHT'
         });
+      }
+
+      if (typeof plugin.setOverlaysWebView === 'function') {
+        try {
+          await plugin.setOverlaysWebView({
+            overlay: false
+          });
+        } catch (error) {
+          console.warn(
+            'Android may be enforcing edge-to-edge display:',
+            error
+          );
+        }
+      }
+
+      if (
+        typeof plugin.setBackgroundColor === 'function' &&
+        /^#[0-9a-f]{6}$/i.test(background)
+      ) {
+        try {
+          await plugin.setBackgroundColor({
+            color: background
+          });
+        } catch (error) {
+          console.warn(
+            'Native status bar background could not be changed:',
+            error
+          );
+        }
       }
 
       lastStatusSignature = signature;
@@ -463,6 +503,7 @@
 
     function handlePreferenceChange() {
       if (getSetting('theme') === 'system') {
+        lastStatusSignature = '';
         apply();
       }
     }
@@ -477,6 +518,7 @@
   /* ---------- APP LIFECYCLE ---------- */
 
   document.addEventListener('studio:appearance-changed', function () {
+    lastStatusSignature = '';
     refreshStatusBar();
   });
 
@@ -492,14 +534,14 @@
     apply();
   });
 
-  /* ---------- INITIALIZATION ---------- */
-
-  document.addEventListener('DOMContentLoaded', apply);
-
   window.addEventListener('storage', function () {
     lastStatusSignature = '';
     apply();
   });
+
+  /* ---------- INITIALIZATION ---------- */
+
+  document.addEventListener('DOMContentLoaded', apply);
 
   if (document.readyState !== 'loading') {
     apply();
