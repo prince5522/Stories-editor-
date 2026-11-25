@@ -1,3 +1,4 @@
+
 {
   "appId": "com.prince5522.storieseditor",
   "appName": "Stories Editor",
@@ -9,6 +10,11 @@
     "LocalNotifications": {
       "iconColor": "#00A86B",
       "sound": "default"
+    },
+    "StatusBar": {
+      "overlaysWebView": false,
+      "backgroundColor": "#101827",
+      "style": "LIGHT"
     }
   }
 }
