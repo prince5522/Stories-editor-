@@ -13,58 +13,170 @@
   <link rel="stylesheet" href="./whatsapp-shell.css">
 
   <style>
-    .accounts-page {
-      max-width: 760px;
-      margin: auto;
-      padding: 24px 16px 110px;
+    :root {
+      --account-accent: var(--accent, #16a99b);
+      --account-accent-2: var(--accent-secondary, #5278ef);
+      --account-surface: var(--card, rgba(128,128,128,.075));
+      --account-border: var(--border, rgba(128,128,128,.18));
+      --account-muted: var(--muted, #8995a8);
     }
 
-    .account-heading { margin-bottom: 22px; }
-    .account-heading h1 { margin: 7px 0; font-size: clamp(25px, 5vw, 34px); }
-    .muted { color: var(--muted, #8b98a9); line-height: 1.6; }
+    body {
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 5% 5%, rgba(25,169,156,.13), transparent 38%),
+        radial-gradient(ellipse at 95% 25%, rgba(82,120,239,.12), transparent 35%),
+        var(--bg, var(--background, #101827));
+    }
+
+    .accounts-page {
+      width: min(100% - 28px, 780px);
+      margin: auto;
+      padding: 30px 0 110px;
+    }
+
+    .account-heading {
+      position: relative;
+      overflow: hidden;
+      padding: 25px 22px;
+      margin-bottom: 20px;
+      border: 1px solid var(--account-border);
+      border-radius: 25px;
+      background:
+        linear-gradient(125deg, rgba(20,169,156,.15), rgba(82,120,239,.10)),
+        var(--account-surface);
+      box-shadow: 0 14px 40px rgba(0,0,0,.07);
+    }
+
+    .account-heading::after {
+      content: "✦";
+      position: absolute;
+      right: 20px;
+      top: 5px;
+      font-size: 100px;
+      line-height: 1;
+      opacity: .07;
+      pointer-events: none;
+    }
+
+    .heading-label {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      border-radius: 30px;
+      background: rgba(25,169,156,.13);
+      color: var(--account-accent);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 1.2px;
+    }
+
+    .account-heading h1 {
+      margin: 14px 0 8px;
+      font-size: clamp(27px, 6vw, 38px);
+      line-height: 1.15;
+      letter-spacing: -.8px;
+    }
+
+    .muted {
+      color: var(--account-muted);
+      line-height: 1.65;
+    }
+
+    .account-heading .muted {
+      max-width: 540px;
+      margin: 0;
+      font-size: 14px;
+    }
 
     .account-panel {
-      border: 1px solid var(--border, rgba(128,128,128,.2));
-      background: var(--card, rgba(128,128,128,.07));
-      border-radius: 20px;
-      padding: 20px;
-      margin-bottom: 18px;
+      position: relative;
+      overflow: hidden;
+      padding: 21px;
+      margin-bottom: 16px;
+      border: 1px solid var(--account-border);
+      border-radius: 22px;
+      background: var(--account-surface);
+      box-shadow: 0 9px 28px rgba(0,0,0,.045);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
     }
 
-    .account-panel h2 { margin: 0 0 15px; font-size: 18px; }
+    .account-panel h2 {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin: 0 0 15px;
+      font-size: 17px;
+      font-weight: 850;
+    }
+
+    .panel-number {
+      display: inline-grid;
+      place-items: center;
+      width: 29px;
+      height: 29px;
+      flex-shrink: 0;
+      border-radius: 10px;
+      background: rgba(25,169,156,.13);
+      color: var(--account-accent);
+      font-size: 13px;
+    }
 
     .account-identity {
       display: flex;
       align-items: center;
       gap: 15px;
+      padding: 16px;
+      border: 1px solid var(--account-border);
+      border-radius: 18px;
+      background: rgba(128,128,128,.045);
     }
 
     .account-avatar {
-      width: 58px;
-      height: 58px;
+      width: 62px;
+      height: 62px;
       flex-shrink: 0;
       display: grid;
       place-items: center;
-      border-radius: 18px;
-      background: linear-gradient(135deg, #087f8c, #27b5a5);
+      border-radius: 20px;
+      background: linear-gradient(140deg, #087f8c, #22b9a6 55%, #5278ef);
       color: white;
       font-size: 23px;
-      font-weight: 800;
+      font-weight: 900;
+      box-shadow: 0 8px 22px rgba(8,127,140,.24);
     }
 
-    .account-info { min-width: 0; flex: 1; }
-    .account-info h3 { margin: 0 0 5px; overflow-wrap: anywhere; }
-    .account-info p { margin: 0; overflow-wrap: anywhere; font-size: 13px; }
+    .account-info {
+      min-width: 0;
+      flex: 1;
+    }
+
+    .account-info h3 {
+      margin: 0 0 5px;
+      font-size: 17px;
+      overflow-wrap: anywhere;
+    }
+
+    .account-info p {
+      margin: 0;
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
 
     .account-status {
-      display: inline-block;
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
       margin-top: 9px;
-      padding: 5px 10px;
+      padding: 6px 10px;
       border-radius: 30px;
-      background: rgba(28,180,130,.14);
+      background: rgba(28,180,130,.13);
       color: #20b889;
-      font-size: 11px;
-      font-weight: 800;
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: .45px;
     }
 
     .account-status.guest {
@@ -72,94 +184,186 @@
       color: #d99b32;
     }
 
-    .account-form { display: grid; gap: 12px; }
-
-    .account-form input {
-      width: 100%;
-      box-sizing: border-box;
-      padding: 14px;
-      border: 1px solid var(--border, rgba(128,128,128,.25));
-      border-radius: 12px;
-      background: var(--input-bg, transparent);
-      color: var(--text, inherit);
-      font: inherit;
-      outline: none;
+    .account-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 15px;
     }
-
-    .account-form input:focus { border-color: #19a99c; }
 
     .account-button {
-      border: 0;
-      border-radius: 12px;
+      min-height: 45px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      border: 1px solid transparent;
+      border-radius: 13px;
       padding: 12px 16px;
       font: inherit;
-      font-weight: 700;
+      font-size: 13px;
+      font-weight: 800;
       cursor: pointer;
+      transition: transform .18s ease, filter .18s ease, box-shadow .18s ease;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .account-button:disabled { opacity: .55; cursor: not-allowed; }
+    .account-button:active {
+      transform: scale(.97);
+    }
+
+    .account-button:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
 
     .primary-button {
-      background: linear-gradient(135deg, #087f8c, #20b6a4);
+      background: linear-gradient(120deg, #087f8c, #20b6a4);
       color: white;
+      box-shadow: 0 7px 18px rgba(8,127,140,.19);
+    }
+
+    .primary-button:hover {
+      filter: brightness(1.08);
+      box-shadow: 0 9px 23px rgba(8,127,140,.25);
     }
 
     .secondary-button {
-      background: var(--button-bg, rgba(128,128,128,.14));
+      border-color: var(--account-border);
+      background: rgba(128,128,128,.09);
       color: var(--text, inherit);
     }
 
     .danger-button {
       background: rgba(220,60,75,.12);
       color: #e35b68;
+      border-color: rgba(220,60,75,.12);
     }
 
-    .account-actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 9px;
-      margin-top: 14px;
+    .account-form {
+      display: grid;
+      gap: 12px;
+      margin-top: 17px;
+    }
+
+    .account-form input {
+      width: 100%;
+      min-height: 49px;
+      box-sizing: border-box;
+      padding: 13px 15px;
+      border: 1px solid var(--account-border);
+      border-radius: 13px;
+      background: var(--input-bg, rgba(128,128,128,.06));
+      color: var(--text, inherit);
+      font: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+
+    .account-form input::placeholder {
+      color: var(--account-muted);
+      opacity: .85;
+    }
+
+    .account-form input:focus {
+      border-color: var(--account-accent);
+      box-shadow: 0 0 0 3px rgba(25,169,156,.12);
+    }
+
+    .account-form button {
+      width: 100%;
+      margin-top: 3px;
+    }
+
+    .account-help {
+      margin: 0;
+      color: var(--account-muted);
+      font-size: 13px;
+      line-height: 1.75;
     }
 
     .account-notice {
       display: none;
-      padding: 13px;
+      padding: 14px 15px;
       margin-bottom: 16px;
-      border-radius: 12px;
-      background: rgba(28,180,130,.12);
+      border: 1px solid rgba(28,180,130,.18);
+      border-radius: 14px;
+      background: rgba(28,180,130,.11);
       color: #20b889;
       font-size: 13px;
-      line-height: 1.5;
+      line-height: 1.6;
       overflow-wrap: anywhere;
     }
 
     .account-notice.error {
-      background: rgba(220,60,75,.12);
+      border-color: rgba(220,60,75,.2);
+      background: rgba(220,60,75,.11);
       color: #e35b68;
     }
 
     .account-note {
+      padding: 14px 15px;
+      margin: 13px 0;
+      border: 1px solid var(--account-border);
+      border-radius: 15px;
+      background: rgba(128,128,128,.045);
+      color: var(--account-muted);
       font-size: 12px;
-      line-height: 1.7;
-      color: var(--muted, #8b98a9);
+      line-height: 1.8;
+    }
+
+    .account-note strong {
+      color: var(--text, inherit);
     }
 
     .account-divider {
       height: 1px;
-      background: var(--border, rgba(128,128,128,.2));
+      background: var(--account-border);
       margin: 18px 0;
     }
 
-    .account-help {
-      font-size: 13px;
-      line-height: 1.7;
-      color: var(--muted, #8b98a9);
+    @media (max-width: 520px) {
+      .accounts-page {
+        width: min(100% - 22px, 780px);
+        padding-top: 17px;
+      }
+
+      .account-heading {
+        padding: 21px 17px;
+        border-radius: 21px;
+      }
+
+      .account-panel {
+        padding: 16px;
+        border-radius: 19px;
+      }
+
+      .account-identity {
+        gap: 12px;
+        padding: 13px;
+      }
+
+      .account-avatar {
+        width: 54px;
+        height: 54px;
+        border-radius: 17px;
+      }
+
+      .account-actions {
+        flex-direction: column;
+      }
+
+      .account-actions button {
+        width: 100%;
+      }
     }
 
-    @media (max-width: 520px) {
-      .account-panel { padding: 16px; }
-      .account-actions { flex-direction: column; }
-      .account-actions button { width: 100%; }
+    @media (prefers-reduced-motion: reduce) {
+      .account-button,
+      .account-form input {
+        transition: none;
+      }
     }
   </style>
 </head>
@@ -173,17 +377,18 @@
   <main class="accounts-page">
 
     <div class="account-heading">
-      <p class="muted">SUPABASE ACCOUNT CENTER</p>
+      <span class="heading-label">✦ SUPABASE ACCOUNT CENTER</span>
       <h1>👤 Account Management</h1>
       <p class="muted">
-        Manage your real Stories Editor account and securely switch between accounts.
+        Manage your Stories Editor account, switch accounts securely
+        and keep control of your cloud identity.
       </p>
     </div>
 
     <div id="accountNotice" class="account-notice" role="status"></div>
 
     <section class="account-panel">
-      <h2>Current Supabase account</h2>
+      <h2><span class="panel-number">01</span> Current Supabase account</h2>
 
       <div class="account-identity">
         <div class="account-avatar" id="accountAvatar">SE</div>
@@ -201,24 +406,24 @@
         </button>
 
         <button class="account-button danger-button" id="signOutButton" type="button" hidden>
-          Sign out
+          ↪ Sign out
         </button>
       </div>
     </section>
 
     <section class="account-panel">
-      <h2>↔️ Switch to another account</h2>
+      <h2><span class="panel-number">02</span> Switch to another account</h2>
 
       <p class="account-help">
-        Enter the email and password of an existing Supabase account.
-        Stories Editor will sign out of the current account and sign in to the account you enter.
+        Already have another account? Enter its email and password below.
+        Stories Editor will switch your active Supabase account.
       </p>
 
       <form class="account-form" id="switchForm">
         <input
           id="switchEmail"
           type="email"
-          placeholder="Account email"
+          placeholder="✉ Account email"
           autocomplete="username"
           required
         >
@@ -226,48 +431,48 @@
         <input
           id="switchPassword"
           type="password"
-          placeholder="Account password"
+          placeholder="🔒 Account password"
           autocomplete="current-password"
           minlength="8"
           required
         >
 
         <button class="account-button primary-button" id="switchButton" type="submit">
-          Switch Supabase account
+          ↔ Switch Supabase account
         </button>
       </form>
     </section>
 
     <section class="account-panel">
-      <h2>＋ Create or access an account</h2>
+      <h2><span class="panel-number">03</span> Create or access an account</h2>
 
       <p class="account-help">
-        Create a new Supabase account with an email, password and username,
-        or open the normal sign-in page.
+        New to Stories Editor? Create an account with your email,
+        password and username. Already registered? Open the sign-in page.
       </p>
 
       <div class="account-actions">
         <button class="account-button primary-button" id="createAccountButton" type="button">
-          Create a new account
+          ＋ Create a new account
         </button>
 
         <button class="account-button secondary-button" id="loginPageButton" type="button">
-          Open sign-in page
+          ⇥ Open sign-in page
         </button>
       </div>
     </section>
 
     <p class="account-note">
-      🔒 Accounts are authenticated by Supabase. This page does not store your
-      password or create fake local accounts. Your previous local profile records
-      are left untouched. Cloud data access is controlled by the database's
-      Row Level Security policies.
+      🔒 <strong>Account security:</strong> Accounts are authenticated by Supabase.
+      This page does not store your password or create fake local accounts.
+      Your previous local profile records are left untouched. Cloud data access
+      is controlled by the database's Row Level Security policies.
     </p>
 
     <p class="account-note">
-      Important: the current cloud synchronization system covers ready-made
-      episodes. Your complete stories library and planner are not yet fully
-      separated and synchronized between Supabase accounts.
+      ☁️ <strong>Cloud synchronization:</strong> The current cloud synchronization
+      system covers ready-made episodes. Your complete stories library and planner
+      are not yet fully separated and synchronized between Supabase accounts.
     </p>
 
   </main>
@@ -301,7 +506,7 @@
 
         $('switchButton').textContent = value
           ? 'Please wait...'
-          : 'Switch Supabase account';
+          : '↔ Switch Supabase account';
       }
 
       function initials(value) {
