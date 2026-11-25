@@ -1,22 +1,31 @@
+
 /* =====================================================
-   STORY STUDIO — RELIABLE ANDROID BACKUP EXPORT
-   Version 1.0
-   Uses StudioStore.allAsync() when available.
-   Prefers Android share sheet; falls back to file download.
-   ===================================================== */
+   STORY STUDIO — RELIABLE LOCAL BACKUP EXPORT
+   Version 2.0 — DOWNLOAD BACKUP FILE
+
+   - Exports all StudioStore records
+   - Saves to Android Documents when Filesystem is available
+   - Otherwise triggers a browser JSON download
+   - Does not modify or delete app data
+===================================================== */
+
 (function () {
   'use strict';
 
-  const buttonId = 'exportBackup';
+  const BUTTON_ID = 'exportBackup';
   let busy = false;
 
   function status(message, isError) {
     const output = document.getElementById('exportStatus');
+
     if (output) {
       output.textContent = message;
       output.style.color = isError ? '#dc5656' : '';
     }
-    if (window.studioToast) window.studioToast(message);
+
+    if (window.studioToast) {
+      window.studioToast(message);
+    }
   }
 
   function dateStamp() {
@@ -25,7 +34,10 @@
 
   async function createBackup() {
     const storage = window.StudioStore;
-    if (!storage) throw new Error('Story Studio storage is not ready.');
+
+    if (!storage) {
+      throw new Error('Story Studio storage is not ready.');
+    }
 
     if (storage.ready) await storage.ready;
     if (storage.flush) await storage.flush();
@@ -41,18 +53,97 @@
     return {
       application: 'Story Studio',
       format: 'story-studio-backup',
-      version: 2,
+      version: 3,
       exportedAt: new Date().toISOString(),
       records
     };
   }
 
+  function toBase64(text) {
+    const bytes = new TextEncoder().encode(text);
+    let binary = '';
+
+    const chunkSize = 0x8000;
+
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      const chunk = bytes.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+
+    return btoa(binary);
+  }
+
+  async function saveWithCapacitor(json, filename) {
+    const capacitor = window.Capacitor;
+
+    if (!capacitor) return false;
+
+    let filesystem = capacitor.Plugins?.Filesystem;
+    let directory = capacitor.Plugins?.Filesystem?.Directory;
+
+    if (!filesystem && typeof capacitor.registerPlugin === 'function') {
+      try {
+        filesystem = capacitor.registerPlugin('Filesystem');
+      } catch (error) {
+        console.warn('Filesystem plugin registration failed:', error);
+      }
+    }
+
+    if (!filesystem || typeof filesystem.writeFile !== 'function') {
+      return false;
+    }
+
+    if (!directory) {
+      directory = { Documents: 'DOCUMENTS' };
+    }
+
+    const result = await filesystem.writeFile({
+      path: filename,
+      data: toBase64(json),
+      directory: directory.Documents || 'DOCUMENTS',
+      recursive: true
+    });
+
+    if (!result || !result.uri) {
+      throw new Error('Android did not confirm the backup file location.');
+    }
+
+    return result;
+  }
+
+  function saveWithBrowser(json, filename) {
+    const blob = new Blob([json], {
+      type: 'application/json;charset=utf-8'
+    });
+
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = filename;
+    link.setAttribute('download', filename);
+    link.style.position = 'fixed';
+    link.style.left = '-9999px';
+
+    document.body.appendChild(link);
+    link.click();
+
+    setTimeout(function () {
+      link.remove();
+      URL.revokeObjectURL(url);
+    }, 60000);
+  }
+
   async function exportBackup() {
     if (busy) return;
+
     busy = true;
 
-    const button = document.getElementById(buttonId);
-    const originalText = button ? button.textContent : 'Download full backup';
+    const button = document.getElementById(BUTTON_ID);
+    const originalText = button
+      ? button.textContent
+      : 'Download full backup';
+
     if (button) {
       button.disabled = true;
       button.textContent = 'Preparing backup…';
@@ -61,49 +152,47 @@
     try {
       const backup = await createBackup();
       const json = JSON.stringify(backup, null, 2);
-      const blob = new Blob([json], { type: 'application/json' });
       const filename = 'story-studio-backup-' + dateStamp() + '.json';
-      const file = new File([blob], filename, { type: 'application/json' });
+      const sectionCount = Object.keys(backup.records).length;
 
-      // Android Chrome/PWA: open the native share sheet when supported.
-      if (navigator.share && navigator.canShare &&
-          navigator.canShare({ files: [file] })) {
-        await navigator.share({
-          files: [file],
-          title: 'Story Studio backup',
-          text: 'Save this Story Studio backup somewhere safe.'
-        });
-        status('Backup ready. Choose Files or Drive in the share sheet to save it. (' +
-          Object.keys(backup.records).length + ' data sections.)', false);
-        return;
+      let nativeResult = false;
+
+      try {
+        nativeResult = await saveWithCapacitor(json, filename);
+      } catch (nativeError) {
+        console.warn(
+          'Android Documents save unavailable; using browser download:',
+          nativeError
+        );
       }
 
-      // Browser fallback: initiate a real file download.
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = filename;
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-
-      // Keep the object URL alive long enough for Android download handling.
-      setTimeout(() => URL.revokeObjectURL(url), 60000);
-
-      status('Backup file download was requested. Check your Downloads folder for ' +
-        filename + '. (' + Object.keys(backup.records).length +
-        ' data sections.)', false);
-
-    } catch (error) {
-      if (error && error.name === 'AbortError') {
-        status('Backup sharing was cancelled. No backup was saved.', false);
+      if (nativeResult) {
+        status(
+          'Backup saved to Android Documents: ' + filename +
+          ' (' + sectionCount + ' data sections).',
+          false
+        );
       } else {
-        console.error('Story Studio backup export failed:', error);
-        status(error.message || 'Backup export failed. Your saved data was not changed.', true);
+        saveWithBrowser(json, filename);
+
+        status(
+          'Backup download started: ' + filename +
+          '. Check your Downloads folder. (' +
+          sectionCount + ' data sections.)',
+          false
+        );
       }
+    } catch (error) {
+      console.error('Story Studio backup export failed:', error);
+
+      status(
+        error.message ||
+        'Backup export failed. Your saved data was not changed.',
+        true
+      );
     } finally {
       busy = false;
+
       if (button) {
         button.disabled = false;
         button.textContent = originalText;
@@ -111,14 +200,20 @@
     }
   }
 
-  // Capture the click before the older app.js export handler.
+  // Capture the button before older app.js click handlers.
   document.addEventListener('click', function (event) {
-    const button = event.target.closest('#' + buttonId);
+    const target = event.target;
+    const button = target && target.closest
+      ? target.closest('#' + BUTTON_ID)
+      : null;
+
     if (!button) return;
+
     event.preventDefault();
     event.stopImmediatePropagation();
+
     exportBackup();
   }, true);
 
-  console.info('Story Studio reliable backup export initialized.');
+  console.info('Story Studio local backup exporter initialized.');
 })();
