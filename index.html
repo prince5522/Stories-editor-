@@ -5,9 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 
-  <script src="./app-shell-behavior.js"></script>
-
-  <meta name="theme-color" content="#0b1424">
+  <meta name="theme-color" content="#071426">
   <meta name="description" content="Your personal WhatsApp Channel publishing studio">
 
   <title>Welcome — Stories Editor</title>
@@ -18,360 +16,406 @@
   <link rel="stylesheet" href="./themes.css">
   <link rel="stylesheet" href="./whatsapp-shell.css">
 
+  <script src="./app-shell-behavior.js"></script>
+
   <style>
-    .welcome-page {
+    * { box-sizing: border-box; }
+
+    body.welcome-page {
+      --welcome-text: #f5f8ff;
+      --welcome-muted: #b8cbed;
+      --welcome-blue: #258bff;
+      --welcome-cyan: #08e4d0;
+      margin: 0;
       min-height: 100vh;
       min-height: 100dvh;
-      margin: 0;
-      padding: 24px 18px;
+      padding: 22px 18px;
       display: grid;
       place-items: center;
       overflow-x: hidden;
+      color: var(--welcome-text);
       background:
-        radial-gradient(ellipse at 15% 15%, rgba(40, 130, 255, .19), transparent 38%),
-        radial-gradient(ellipse at 85% 80%, rgba(0, 210, 170, .13), transparent 38%),
-        linear-gradient(145deg, #07111f, #101d32 55%, #091523);
-      color: #f4f8ff;
+        radial-gradient(ellipse at 50% 22%, #0759a84d, transparent 40%),
+        radial-gradient(ellipse at 100% 65%, #00cbb52b, transparent 35%),
+        radial-gradient(ellipse at 0% 85%, #1267ff30, transparent 40%),
+        linear-gradient(145deg, #030a18, #071a35 52%, #020b19);
     }
 
-    .welcome-shell {
+    .welcome-screen {
       position: relative;
       isolation: isolate;
-      width: min(100%, 490px);
-      padding: 30px 26px 22px;
+      width: min(100%, 520px);
+      padding: 18px 0 12px;
       overflow: hidden;
-      border: 1px solid rgba(255,255,255,.13);
-      border-radius: 30px;
-      background: linear-gradient(145deg, rgba(255,255,255,.105), rgba(255,255,255,.035));
-      box-shadow: 0 28px 80px rgba(0,0,0,.36), inset 0 1px 0 rgba(255,255,255,.12);
-      backdrop-filter: blur(24px);
-      -webkit-backdrop-filter: blur(24px);
     }
 
-    .welcome-shell::before,
-    .welcome-shell::after {
+    .welcome-screen::before,
+    .welcome-screen::after {
       content: "";
       position: absolute;
       z-index: -1;
+      width: 290px;
+      height: 290px;
       border-radius: 50%;
-      filter: blur(35px);
+      filter: blur(90px);
+      pointer-events: none;
     }
 
-    .welcome-shell::before {
-      width: 260px;
-      height: 260px;
-      top: -145px;
-      right: -100px;
-      background: rgba(56, 142, 255, .22);
+    .welcome-screen::before {
+      top: 5%;
+      left: -190px;
+      background: #087aff55;
     }
 
-    .welcome-shell::after {
-      width: 220px;
-      height: 220px;
-      bottom: -150px;
-      left: -100px;
-      background: rgba(0, 220, 170, .15);
+    .welcome-screen::after {
+      right: -190px;
+      bottom: 8%;
+      background: #00e5c044;
     }
 
     .welcome-topline {
+      width: fit-content;
+      max-width: 100%;
       display: flex;
       align-items: center;
-      gap: 9px;
-      color: #a9c9ed;
-      font-size: 11px;
-      font-weight: 800;
+      gap: 11px;
+      padding: 11px 18px;
+      border: 1px solid #579bff55;
+      border-radius: 50px;
+      background: #0b214b99;
+      color: #e8f3ff;
+      font-size: 10px;
+      font-weight: 900;
       letter-spacing: 2px;
+      box-shadow: 0 0 30px #087aff20;
     }
 
-    .live-dot {
-      width: 8px;
-      height: 8px;
-      flex: 0 0 8px;
+    .welcome-live-dot {
+      width: 9px;
+      height: 9px;
+      flex: 0 0 9px;
       border-radius: 50%;
-      background: #39e6ae;
-      box-shadow: 0 0 13px rgba(57,230,174,.8);
-    }
-
-    .welcome-sparkle {
-      margin-left: auto;
-      color: #70cfff;
-      font-size: 19px;
+      background: #00f0c5;
+      box-shadow: 0 0 14px #00f0c5;
     }
 
     .welcome-art {
       position: relative;
-      height: 205px;
-      margin: 13px 0 8px;
+      height: 265px;
+      margin: 14px 0 4px;
       display: grid;
       place-items: center;
     }
 
     .welcome-orbit {
       position: absolute;
-      border: 1px solid rgba(130,195,255,.2);
+      width: 280px;
+      height: 120px;
+      border: 2px solid transparent;
+      border-top-color: #00e6db;
+      border-bottom-color: #327bff;
       border-radius: 50%;
-      transform: rotate(-22deg);
+      transform: rotate(-19deg);
+      filter: drop-shadow(0 0 9px #00bfff);
     }
 
-    .orbit-one {
-      width: 180px;
-      height: 180px;
-    }
-
-    .orbit-two {
-      width: 235px;
-      height: 112px;
+    .welcome-orbit.second {
+      width: 225px;
+      height: 225px;
+      border: 1px solid #3a8cff55;
       transform: rotate(35deg);
-      border-color: rgba(0,225,190,.2);
+      filter: none;
     }
 
-    .brand-mark.welcome-logo {
-      width: 104px;
-      height: 104px;
+    .welcome-logo {
+      position: relative;
+      z-index: 2;
+      width: 125px;
+      height: 125px;
       display: grid;
       place-items: center;
-      border-radius: 31px;
-      border: 1px solid rgba(255,255,255,.35);
-      background: linear-gradient(145deg, #48a5ff, #1764d5 58%, #08469e);
-      box-shadow: 0 16px 42px rgba(24,116,235,.38), inset 0 2px 2px rgba(255,255,255,.3);
+      border: 1px solid #b5eaff;
+      border-radius: 34px;
+      background: linear-gradient(145deg, #168cff, #0749a8 65%, #052c69);
       color: white;
-      font-size: 35px;
-      font-weight: 900;
-      letter-spacing: -3px;
+      font-size: 48px;
+      font-weight: 950;
+      letter-spacing: -5px;
+      box-shadow:
+        0 0 35px #168cff77,
+        0 20px 50px #0008,
+        inset 0 2px 3px #ffffff80;
+      transform: rotate(-5deg);
     }
 
-    .art-chip {
+    .welcome-logo::after {
+      content: "";
       position: absolute;
-      padding: 9px 12px;
-      border: 1px solid rgba(255,255,255,.15);
-      border-radius: 13px;
-      background: rgba(255,255,255,.09);
-      color: #e8f4ff;
-      font-size: 11px;
-      font-weight: 700;
-      box-shadow: 0 8px 20px rgba(0,0,0,.14);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
+      inset: 8px;
+      border: 1px solid #ffffff35;
+      border-radius: 27px;
     }
 
-    .chip-one { top: 28px; left: 2px; }
-    .chip-two { top: 49px; right: 0; }
-    .chip-three { bottom: 20px; left: 50%; transform: translateX(-50%); }
+    .welcome-chip {
+      position: absolute;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 11px 14px;
+      border: 1px solid #80baff55;
+      border-radius: 16px;
+      background: linear-gradient(140deg, #173b70dd, #071c39e8);
+      color: #f3f8ff;
+      font-size: 11px;
+      font-weight: 800;
+      box-shadow: 0 12px 30px #0005;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .welcome-chip span {
+      font-size: 18px;
+    }
+
+    .chip-create { left: 0; top: 48px; }
+    .chip-ready { right: 0; top: 95px; }
+    .chip-share {
+      bottom: 4px;
+      left: 50%;
+      transform: translateX(-50%);
+    }
 
     .welcome-eyebrow {
-      margin: 13px 0 10px;
-      color: #68c9ff;
-      font-size: 10px;
-      font-weight: 800;
-      letter-spacing: 2px;
+      margin: 12px 0 14px;
+      color: #75caff;
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 2.7px;
       text-align: center;
     }
 
-    .welcome-shell h1 {
+    .welcome-heading {
       margin: 0;
-      color: #f7faff;
-      font-size: clamp(34px, 9vw, 43px);
-      font-weight: 850;
-      line-height: 1.12;
-      letter-spacing: -1.8px;
       text-align: center;
+      font-size: clamp(35px, 9vw, 51px);
+      line-height: 1.05;
+      font-weight: 950;
+      letter-spacing: -2px;
+      color: #f7faff;
     }
 
-    .welcome-shell h1 span {
-      background: linear-gradient(90deg, #72c8ff, #75e9d0);
+    .welcome-heading span {
+      display: block;
+      margin-top: 5px;
+      background: linear-gradient(90deg, #378cff, #48d9ff 48%, #00e5c1);
       background-clip: text;
       -webkit-background-clip: text;
       color: transparent;
     }
 
-    .welcome-copy {
-      max-width: 360px;
-      margin: 17px auto 22px;
-      color: #b8c8db;
-      font-size: 14px;
+    .welcome-description {
+      max-width: 390px;
+      margin: 20px auto 24px;
+      color: var(--welcome-muted);
+      text-align: center;
+      font-size: 13px;
       line-height: 1.8;
-      text-align: center;
     }
 
-    .welcome-benefits {
+    .welcome-features {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 10px;
-      margin: 0 0 25px;
+      margin: 25px 0;
     }
 
-    .welcome-benefits span {
+    .welcome-feature {
       min-width: 0;
-      padding: 12px 10px;
-      border: 1px solid rgba(255,255,255,.1);
-      border-radius: 13px;
-      background: rgba(255,255,255,.055);
-      color: #e1edf9;
-      font-size: 11px;
-      font-weight: 650;
+      min-height: 112px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 7px;
+      border: 1px solid #77aaff55;
+      border-radius: 20px;
+      background: linear-gradient(145deg, #17396b99, #071d39bb);
+      color: #f1f7ff;
       text-align: center;
+      box-shadow: inset 0 1px 0 #ffffff12, 0 12px 25px #0003;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
-    .welcome-benefits span:last-child {
-      grid-column: 1 / -1;
+    .welcome-feature-icon {
+      color: #00e5d0;
+      font-size: 28px;
+      line-height: 1;
+      filter: drop-shadow(0 0 9px #00d9d477);
     }
 
-    .welcome-actions { margin-top: 4px; }
+    .welcome-feature strong {
+      font-size: 10px;
+      line-height: 1.45;
+      font-weight: 850;
+    }
+
+    .welcome-actions {
+      margin: 27px 0 0;
+    }
 
     .welcome-cta {
+      position: relative;
       width: 100%;
-      min-height: 55px;
+      min-height: 62px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 12px;
-      border: 0;
-      border-radius: 16px;
-      background: linear-gradient(100deg, #2588f5, #0878df 55%, #08a995);
-      box-shadow: 0 12px 28px rgba(0,125,230,.25);
-      color: white;
-      font-size: 15px;
-      font-weight: 800;
+      gap: 13px;
+      overflow: hidden;
+      border: 1px solid #a1ffff99;
+      border-radius: 50px;
+      background: linear-gradient(100deg, #176aff, #078ee9 48%, #00cdb6);
+      color: #fff;
       text-decoration: none;
+      font-size: 15px;
+      font-weight: 950;
+      box-shadow:
+        0 12px 35px #087dff45,
+        0 0 25px #00d8c633,
+        inset 0 1px 0 #ffffff80;
       transition: transform .2s ease, filter .2s ease;
     }
 
     .welcome-cta:active {
-      transform: scale(.98);
-      filter: brightness(1.12);
+      transform: scale(.975);
+      filter: brightness(1.15);
     }
 
-    .welcome-cta span { font-size: 20px; }
+    .welcome-cta .arrow {
+      width: 32px;
+      height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      background: #ffffff;
+      color: #0879d9;
+      font-size: 20px;
+    }
 
-    .welcome-bottom {
+    .welcome-footer {
       display: flex;
+      align-items: center;
       justify-content: space-between;
       gap: 12px;
-      margin-top: 25px;
-      padding-top: 17px;
-      border-top: 1px solid rgba(255,255,255,.1);
-      color: #849ab3;
+      margin-top: 30px;
+      padding: 17px 5px 0;
+      border-top: 1px solid #8cbaff33;
+      color: #a9c5e9;
       font-size: 10px;
-      font-weight: 650;
-      letter-spacing: .4px;
+      font-weight: 750;
     }
 
-    .welcome-bottom b { color: #67d9c0; }
-
-    @media (max-width: 380px) {
-      .welcome-shell {
-        padding: 24px 19px 19px;
-        border-radius: 25px;
-      }
-
-      .welcome-art { height: 180px; }
-
-      .orbit-one {
-        width: 155px;
-        height: 155px;
-      }
-
-      .orbit-two { width: 205px; }
-
-      .brand-mark.welcome-logo {
-        width: 88px;
-        height: 88px;
-        border-radius: 27px;
-      }
-
-      .art-chip {
-        padding: 8px 9px;
-        font-size: 10px;
-      }
+    .welcome-footer span:last-child {
+      color: #67e8d6;
     }
 
-    @media (prefers-reduced-motion: reduce) {
+    @media(max-width:390px) {
+      body.welcome-page { padding: 14px 14px; }
+      .welcome-art { height: 230px; }
+      .welcome-logo { width: 108px; height: 108px; font-size: 42px; }
+      .welcome-orbit { width: 245px; }
+      .welcome-orbit.second { width: 195px; height: 195px; }
+      .welcome-chip { padding: 9px 10px; font-size: 10px; }
+      .welcome-heading { font-size: 36px; }
+      .welcome-feature { min-height: 100px; }
+      .welcome-footer { font-size: 9px; }
+    }
+
+    @media(prefers-reduced-motion:reduce) {
       .welcome-cta { transition: none; }
-      .floating { animation: none !important; }
+      .welcome-screen * { animation: none !important; }
     }
   </style>
 </head>
 
 <body class="welcome-page">
-  <main class="welcome-shell morph-in">
+  <main class="welcome-screen">
+
     <div class="welcome-topline">
-      <span class="live-dot"></span>
+      <span class="welcome-live-dot"></span>
       YOUR CREATOR SPACE
-      <span class="welcome-sparkle">✦</span>
     </div>
 
-    <div class="welcome-art" aria-hidden="true">
-      <div class="welcome-orbit orbit-one"></div>
-      <div class="welcome-orbit orbit-two"></div>
-      <div class="brand-mark welcome-logo floating">CS</div>
-      <span class="art-chip chip-one">✍️ Create</span>
-      <span class="art-chip chip-two">🔔 Stay ready</span>
-      <span class="art-chip chip-three">📣 Share</span>
-    </div>
+    <section class="welcome-art" aria-label="Stories Editor branding">
+      <div class="welcome-orbit second"></div>
+      <div class="welcome-orbit"></div>
 
-    <p class="eyebrow welcome-eyebrow">
+      <div class="welcome-logo">CS</div>
+
+      <div class="welcome-chip chip-create">
+        <span>✍️</span> Create
+      </div>
+
+      <div class="welcome-chip chip-ready">
+        <span>🔔</span> Stay ready
+      </div>
+
+      <div class="welcome-chip chip-share">
+        <span>📣</span> Share
+      </div>
+    </section>
+
+    <p class="welcome-eyebrow">
       YOUR IDEAS. YOUR CHANNELS. YOUR SPACE.
     </p>
 
-    <h1>
-      Welcome to<br>
+    <h1 class="welcome-heading">
+      Welcome to
       <span>Stories Editor</span>
     </h1>
 
-    <p class="welcome-copy">
+    <p class="welcome-description">
       Everything you need to organise your stories, manage your media
       and plan your WhatsApp Channel posts — all in one creative space.
     </p>
 
-    <div class="welcome-benefits">
-      <span>✦ Stories &amp; episodes</span>
-      <span>✦ Media library</span>
-      <span>✦ Smart posting planner</span>
-    </div>
+    <section class="welcome-features" aria-label="App features">
+      <article class="welcome-feature">
+        <span class="welcome-feature-icon">▤</span>
+        <strong>Stories &amp;<br>episodes</strong>
+      </article>
+
+      <article class="welcome-feature">
+        <span class="welcome-feature-icon">▧</span>
+        <strong>Media<br>library</strong>
+      </article>
+
+      <article class="welcome-feature">
+        <span class="welcome-feature-icon">▦</span>
+        <strong>Smart posting<br>planner</strong>
+      </article>
+    </section>
 
     <div class="welcome-actions">
-      <a class="button primary welcome-cta" href="./login.html">
+      <a class="welcome-cta" href="./login.html">
         Let's get started
-        <span aria-hidden="true">↗</span>
+        <span class="arrow" aria-hidden="true">➜</span>
       </a>
     </div>
 
-    <div class="welcome-bottom">
+    <footer class="welcome-footer">
       <span>Made for creators</span>
-      <span>Keep creating <b>✦</b></span>
-    </div>
+      <span>✦ Keep creating</span>
+    </footer>
+
   </main>
 
   <script src="./storage.js"></script>
   <script src="./themes.js"></script>
   <script src="./app.js"></script>
   <script src="./whatsapp-shell.js"></script>
-
-  <script>
-    (() => {
-      'use strict';
-
-      const selector = 'body.welcome-page .welcome-shell';
-
-      function removeDuplicateWelcomeCards() {
-        const cards = document.querySelectorAll(selector);
-
-        cards.forEach((card, index) => {
-          if (index > 0) card.remove();
-        });
-      }
-
-      removeDuplicateWelcomeCards();
-
-      const observer = new MutationObserver(() => {
-        removeDuplicateWelcomeCards();
-      });
-
-      observer.observe(document.body, {
-        childList: true,
-        subtree: true
-      });
-    })();
-  </script>
 </body>
 </html>
