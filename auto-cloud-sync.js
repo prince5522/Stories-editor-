@@ -1,14 +1,13 @@
 
 /* =====================================================
    STORY STUDIO — AUTOMATIC CLOUD SYNC
-   Version 1.0
+   Version 2.0 — NO BACKUP TRIGGERED BY LOGIN
 
-   - Watches StudioStore changes
-   - Debounces repeated saves
-   - Queues changes while offline
-   - Uses revision-controlled cloud backups
-   - Never silently overwrites a newer revision
+   - Watches actual StudioStore changes
+   - Does not upload just because an account logs in
+   - New changes after login can sync automatically
    - Keeps local storage as the immediate save
+   - Protects newer cloud revisions
 ===================================================== */
 
 (function () {
@@ -27,9 +26,9 @@
   let lastRevision = null;
   let lastSyncedAt = null;
   let started = false;
+  let accountReady = false;
 
   const pendingKeys = new Set();
-
   const $ = id => document.getElementById(id);
 
   function emitStatus(state, message) {
@@ -40,23 +39,18 @@
       syncedAt: lastSyncedAt
     };
 
-    window.dispatchEvent(
-      new CustomEvent('channelstudio:auto-sync-status', {
-        detail
-      })
-    );
+    window.dispatchEvent(new CustomEvent('channelstudio:auto-sync-status', {
+      detail
+    }));
 
     const element = $('cloudStatus');
-
     if (element) {
       element.textContent = message;
       element.dataset.syncState = state;
-      element.dataset.online =
-        state === 'synced' ? 'true' : 'false';
+      element.dataset.online = state === 'synced' ? 'true' : 'false';
     }
 
     const backupStatus = $('cloudBackupStatus');
-
     if (backupStatus && state === 'conflict') {
       backupStatus.textContent = message;
     }
@@ -71,69 +65,45 @@
   }
 
   function scheduleSync() {
-    if (paused) return;
+    if (paused || !accountReady) return;
 
     dirty = true;
-
     clearTimeout(timer);
 
     if (!isOnline()) {
-      emitStatus(
-        'offline',
-        'Offline · changes saved on this device'
-      );
+      emitStatus('offline', 'Offline · changes saved on this device');
       return;
     }
 
-    emitStatus(
-      'pending',
-      'Changes saved locally · waiting to sync…'
-    );
-
+    emitStatus('pending', 'Changes saved locally · waiting to sync…');
     timer = setTimeout(runSync, DEBOUNCE_MS);
   }
 
   function recordChange(event) {
     const detail = event && event.detail;
-
     if (!detail || !detail.key) return;
 
-    pendingKeys.add(detail.key);
+    // Ignore changes until the account connection has completed.
+    // This prevents login from uploading old pending local records.
+    if (!accountReady) return;
 
+    pendingKeys.add(detail.key);
     scheduleSync();
   }
 
   async function waitForCloud() {
     const cloud = getCloud();
-
-    if (!cloud) {
-      throw new Error('Cloud system is not loaded.');
-    }
+    if (!cloud) throw new Error('Cloud system is not loaded.');
 
     if (cloud.ready) {
       const ready = await cloud.ready;
-
       if (!ready || ready.online === false) {
-        throw new Error(
-          ready?.error || 'Cloud connection unavailable.'
-        );
-      }
-    }
-
-    if (cloud.waitForCloudSync) {
-      const result = await cloud.waitForCloudSync();
-
-      if (result && result.success === false) {
-        throw new Error(
-          result.error || 'Initial cloud sync failed.'
-        );
+        throw new Error(ready?.error || 'Cloud connection unavailable.');
       }
     }
 
     if (!cloud.isLoggedIn || !cloud.isLoggedIn()) {
-      throw new Error(
-        'Sign in with your registered account to sync.'
-      );
+      throw new Error('Sign in with your registered account to sync.');
     }
 
     const client = cloud.getClient();
@@ -148,13 +118,10 @@
 
   async function makeSnapshot() {
     const store = window.StudioStore;
+    if (!store) throw new Error('Local storage is unavailable.');
 
-    if (!store) {
-      throw new Error('Local storage is unavailable.');
-    }
-
-    await store.ready;
-    await store.flush();
+    if (store.ready) await store.ready;
+    if (store.flush) await store.flush();
 
     const records = await store.allAsync();
 
@@ -172,8 +139,7 @@
 
     if (size > MAX_BYTES) {
       throw new Error(
-        'App records exceed the 5 MB cloud backup limit. ' +
-        'Media files will sync separately.'
+        'App records exceed the 5 MB cloud backup limit. Media files will sync separately.'
       );
     }
 
@@ -185,11 +151,8 @@
 
   async function saveSnapshot() {
     const { client, user } = await waitForCloud();
+    const { snapshot, recordCount } = await makeSnapshot();
 
-    const { snapshot, recordCount } =
-      await makeSnapshot();
-
-    // Read the latest cloud revision immediately before saving.
     const { data: current, error: readError } = await client
       .from(TABLE)
       .select('revision')
@@ -202,15 +165,9 @@
       ? Number(current.revision) || 0
       : 0;
 
-    // If this device already knows a newer revision,
-    // never try to upload against an older one.
-    if (
-      lastRevision !== null &&
-      expectedRevision < lastRevision
-    ) {
+    if (lastRevision !== null && expectedRevision < lastRevision) {
       throw new Error(
-        'Cloud revision changed unexpectedly. ' +
-        'Sync paused to protect your newer backup.'
+        'Cloud revision changed unexpectedly. Sync paused to protect your newer backup.'
       );
     }
 
@@ -226,13 +183,9 @@
 
       if (message.includes('BACKUP_REVISION_CONFLICT')) {
         const conflict = new Error(
-          'A newer backup exists on another device. ' +
-          'This device has not overwritten it. ' +
-          'Refresh or restore the latest cloud backup before syncing again.'
+          'A newer backup exists on another device. This device has not overwritten it. Refresh or restore the latest cloud backup before syncing again.'
         );
-
         conflict.code = 'BACKUP_REVISION_CONFLICT';
-
         throw conflict;
       }
 
@@ -240,10 +193,7 @@
     }
 
     const saved = Array.isArray(data) ? data[0] : data;
-
-    if (!saved) {
-      throw new Error('Cloud did not confirm the saved revision.');
-    }
+    if (!saved) throw new Error('Cloud did not confirm the saved revision.');
 
     lastRevision = Number(saved.new_revision);
     lastSyncedAt = saved.saved_at || new Date().toISOString();
@@ -252,20 +202,16 @@
   }
 
   async function runSync() {
-    if (syncing || paused || !dirty) return;
+    if (syncing || paused || !dirty || !accountReady) return;
 
     if (!isOnline()) {
-      emitStatus(
-        'offline',
-        'Offline · changes waiting on this device'
-      );
+      emitStatus('offline', 'Offline · changes waiting on this device');
       return;
     }
 
     syncing = true;
     dirty = false;
-
-    emitStatus('syncing', 'Syncing changes to cloud…');
+    emitStatus('syncing', 'Syncing new changes to cloud…');
 
     try {
       const saved = await saveSnapshot();
@@ -273,56 +219,37 @@
       lastError = '';
       pendingKeys.clear();
 
-      emitStatus(
-        'synced',
-        'All changes synced ✓'
-      );
+      emitStatus('synced', 'All new changes synced ✓');
 
-      window.dispatchEvent(
-        new CustomEvent('channelstudio:auto-synced', {
-          detail: {
-            revision: lastRevision,
-            savedAt: lastSyncedAt,
-            result: saved
-          }
-        })
-      );
-
+      window.dispatchEvent(new CustomEvent('channelstudio:auto-synced', {
+        detail: {
+          revision: lastRevision,
+          savedAt: lastSyncedAt,
+          result: saved
+        }
+      }));
     } catch (error) {
       console.error('Automatic cloud sync failed:', error);
-
       lastError = error.message || 'Cloud sync failed.';
 
       if (error.code === 'BACKUP_REVISION_CONFLICT') {
         paused = true;
-
-        emitStatus(
-          'conflict',
-          'Sync paused · newer cloud backup detected'
-        );
-
+        emitStatus('conflict', 'Sync paused · newer cloud backup detected');
       } else {
         dirty = true;
-
-        emitStatus(
-          'failed',
-          'Sync failed · local changes kept'
-        );
+        emitStatus('failed', 'Sync failed · local changes kept');
       }
 
-      window.dispatchEvent(
-        new CustomEvent('channelstudio:auto-sync-error', {
-          detail: {
-            message: lastError,
-            conflict: error.code === 'BACKUP_REVISION_CONFLICT'
-          }
-        })
-      );
-
+      window.dispatchEvent(new CustomEvent('channelstudio:auto-sync-error', {
+        detail: {
+          message: lastError,
+          conflict: error.code === 'BACKUP_REVISION_CONFLICT'
+        }
+      }));
     } finally {
       syncing = false;
 
-      if (dirty && !paused && isOnline()) {
+      if (dirty && !paused && accountReady && isOnline()) {
         clearTimeout(timer);
         timer = setTimeout(runSync, DEBOUNCE_MS);
       }
@@ -330,6 +257,11 @@
   }
 
   function retry() {
+    if (!accountReady) {
+      emitStatus('pending', 'Sign in first · local changes are safe');
+      return;
+    }
+
     paused = false;
     lastError = '';
     dirty = true;
@@ -341,6 +273,7 @@
       syncing,
       dirty,
       paused,
+      accountReady,
       revision: lastRevision,
       syncedAt: lastSyncedAt,
       error: lastError,
@@ -352,21 +285,16 @@
     if (started) return;
 
     if (!window.StudioStore) {
-      console.warn(
-        'Automatic sync: StudioStore is not available.'
-      );
+      console.warn('Automatic sync: StudioStore is not available.');
       return;
     }
 
     started = true;
 
-    window.addEventListener(
-      'channelstudio:store-changed',
-      recordChange
-    );
+    window.addEventListener('channelstudio:store-changed', recordChange);
 
     window.addEventListener('online', function () {
-      if (dirty) {
+      if (dirty && accountReady) {
         emitStatus('pending', 'Back online · syncing queued changes…');
         scheduleSync();
       }
@@ -374,29 +302,32 @@
 
     window.addEventListener('offline', function () {
       if (dirty) {
-        emitStatus(
-          'offline',
-          'Offline · changes saved on this device'
-        );
+        emitStatus('offline', 'Offline · changes saved on this device');
       }
     });
 
-    window.addEventListener(
-      'channelstudio:cloud-ready',
-      function () {
-        if (dirty) scheduleSync();
-      }
-    );
+    // A login or initial account connection is NOT a backup request.
+    // Clear pre-login pending flags without touching local records.
+    window.addEventListener('channelstudio:cloud-ready', function () {
+      accountReady = true;
+      dirty = false;
+      pendingKeys.clear();
+      clearTimeout(timer);
 
-    window.addEventListener(
-      'channelstudio:logged-out',
-      function () {
-        emitStatus(
-          'offline',
-          'Signed out · local changes kept'
-        );
-      }
-    );
+      emitStatus(
+        'synced',
+        'Account connected · local data preserved'
+      );
+    });
+
+    window.addEventListener('channelstudio:logged-out', function () {
+      accountReady = false;
+      dirty = false;
+      pendingKeys.clear();
+      clearTimeout(timer);
+
+      emitStatus('offline', 'Signed out · local changes kept');
+    });
 
     window.StoryStudioAutoSync = {
       sync: retry,
@@ -409,17 +340,12 @@
       'Automatic sync ready · waiting for account connection'
     );
 
-    console.info(
-      'Story Studio automatic sync engine initialized.'
-    );
+    console.info('Story Studio automatic sync engine initialized.');
   }
 
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', start, {
-      once: true
-    });
+    document.addEventListener('DOMContentLoaded', start, { once: true });
   } else {
     start();
   }
-
 })();
