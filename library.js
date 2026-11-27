@@ -1,7 +1,8 @@
 
 /* =========================================================
    STORIES EDITOR — CENTRAL LIBRARY
-   Version 3.0 — RESTORED CONTINUE STORY ACTION
+   Version 4.0 — RESTORED STORY ACTION BUTTONS
+   Actions: Read, Split, Continue, Edit, Delete
 ========================================================= */
 
 (function () {
@@ -18,6 +19,16 @@
       console.error('Library read error:', key, error);
       return [];
     }
+  };
+
+  const save = (key, value) => {
+    const db = store();
+
+    if (!db || typeof db.set !== 'function') {
+      throw new Error('Storage is not available. Your data was not changed.');
+    }
+
+    db.set(key, value);
   };
 
   const escapeHTML = value =>
@@ -118,6 +129,7 @@
         String(story.title || 'Untitled story').trim(),
         seasonNumber(story)
       );
+
       folder.manuscripts.push(story);
     });
 
@@ -129,6 +141,7 @@
         serialTitle(episode),
         seasonNumber(episode)
       );
+
       folder.episodes.push(episode);
     });
 
@@ -144,6 +157,7 @@
         readyTitle(episode),
         seasonNumber(episode)
       );
+
       folder.episodes.push(episode);
     });
 
@@ -195,22 +209,47 @@
     if (!content.trim()) return '';
 
     const words = content.trim().split(/\s+/).length;
+    const id = escapeHTML(story.id ?? '');
 
     return `
       <article class="library-episode">
         <h3>📖 Original season manuscript</h3>
-        <p>${escapeHTML(story.genre || 'General')} · ${words.toLocaleString()} words</p>
+
+        <p>
+          ${escapeHTML(story.genre || 'General')}
+          · Season ${seasonNumber(story)}
+          · ${words.toLocaleString()} words
+        </p>
 
         <div class="library-episode-actions">
           <button type="button"
-            data-library-read="manuscript"
-            data-story-id="${escapeHTML(story.id ?? '')}">
-            Read full season
+            data-library-action="read"
+            data-story-id="${id}">
+            📖 Read Season
           </button>
 
           <button type="button"
-            data-library-continue="${escapeHTML(story.id ?? '')}">
+            data-library-action="split"
+            data-story-id="${id}">
+            ✂ Split into Episodes
+          </button>
+
+          <button type="button"
+            data-library-action="continue"
+            data-story-id="${id}">
             ➕ Continue Story
+          </button>
+
+          <button type="button"
+            data-library-action="edit"
+            data-story-id="${id}">
+            ✏️ Edit Details
+          </button>
+
+          <button type="button"
+            data-library-action="delete"
+            data-story-id="${id}">
+            🗑️ Delete
           </button>
         </div>
       </article>
@@ -260,6 +299,7 @@
 
   function renderSeason(season, type) {
     const manuscripts = season.manuscripts.map(renderManuscript).join('');
+
     const episodes = season.episodes
       .map(episode => renderEpisode(episode, type))
       .join('');
@@ -302,6 +342,7 @@
 
     return visible.map(group => {
       const count = countEpisodes(group);
+
       const seasonHTML = group.seasons
         .map(season => renderSeason(season, type))
         .join('');
@@ -394,20 +435,20 @@
     return items.find(item => String(item.id) === String(id));
   }
 
-  function handleReadClick(event) {
-    const button = event.target.closest('[data-library-read]');
+  function handleStoryAction(event) {
+    const button = event.target.closest('[data-library-action]');
     if (!button) return;
 
-    const type = button.dataset.libraryRead;
+    const action = button.dataset.libraryAction;
+    const id = button.dataset.storyId;
+    const story = findById(read('stories'), id);
 
-    if (type === 'manuscript') {
-      const story = findById(read('stories'), button.dataset.storyId);
+    if (!story) {
+      toast('This saved story could not be found.');
+      return;
+    }
 
-      if (!story) {
-        toast('This story could not be found in storage.');
-        return;
-      }
-
+    if (action === 'read') {
       showReader(
         story.title || 'Story manuscript',
         `Season ${seasonNumber(story)} · ${story.genre || 'General'}`,
@@ -415,6 +456,55 @@
       );
       return;
     }
+
+    if (action === 'split') {
+      const url = new URL('./episodes.html', window.location.href);
+      url.searchParams.set('story', String(story.id));
+      window.location.href = url.toString();
+      return;
+    }
+
+    if (action === 'continue') {
+      const url = new URL('./stories.html', window.location.href);
+      url.searchParams.set('continueStory', String(story.id));
+      window.location.href = url.toString();
+      return;
+    }
+
+    if (action === 'edit') {
+      const url = new URL('./stories.html', window.location.href);
+      url.searchParams.set('editStory', String(story.id));
+      window.location.href = url.toString();
+      return;
+    }
+
+    if (action === 'delete') {
+      const confirmed = window.confirm(
+        `Delete "${story.title || 'this season'}"?\n\nOnly this saved manuscript will be deleted. Its existing episodes will be kept.`
+      );
+
+      if (!confirmed) return;
+
+      try {
+        const updatedStories = read('stories').filter(item =>
+          String(item.id) !== String(story.id)
+        );
+
+        save('stories', updatedStories);
+        toast('Manuscript deleted. Existing episodes have been kept.');
+        render();
+      } catch (error) {
+        console.error('Library delete error:', error);
+        toast(error.message || 'The manuscript could not be deleted.');
+      }
+    }
+  }
+
+  function handleReadClick(event) {
+    const button = event.target.closest('[data-library-read]');
+    if (!button) return;
+
+    const type = button.dataset.libraryRead;
 
     if (type === 'serial') {
       const episode = findById(read('episodes'), button.dataset.episodeId);
@@ -451,24 +541,6 @@
     }
   }
 
-  function handleContinueClick(event) {
-    const button = event.target.closest('[data-library-continue]');
-    if (!button) return;
-
-    const id = button.dataset.libraryContinue;
-    const story = findById(read('stories'), id);
-
-    if (!story) {
-      toast('This story could not be found. Refresh the Library and try again.');
-      return;
-    }
-
-    const url = new URL('./stories.html', window.location.href);
-    url.searchParams.set('continueStory', String(story.id));
-
-    window.location.href = url.toString();
-  }
-
   function switchTab(tab) {
     if (tab !== 'serial' && tab !== 'ready') return;
     activeTab = tab;
@@ -501,7 +573,7 @@
     });
 
     $('serialFolders').addEventListener('click', event => {
-      handleContinueClick(event);
+      handleStoryAction(event);
       handleReadClick(event);
     });
 
