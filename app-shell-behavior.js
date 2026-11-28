@@ -1,8 +1,9 @@
 
 /* =====================================================
    STORIES EDITOR — APP SHELL BEHAVIOUR
-   Version 2.0
+   Version 2.1
    - Theme-aware Android safe area
+   - Android sidebar visual positioning correction
    - Shared sidebar navigation
    - Library sidebar update
    - Planner notification routing
@@ -124,6 +125,12 @@
 
         html.native-android-shell .topbar {
           top: 0;
+        }
+
+        html.native-android-shell .sidebar {
+          top: max(28px, env(safe-area-inset-top, 28px));
+          height: calc(100vh - max(28px, env(safe-area-inset-top, 28px)));
+          height: calc(100dvh - max(28px, env(safe-area-inset-top, 28px)));
         }
 
         html.native-android-shell #android-status-bar-background {
